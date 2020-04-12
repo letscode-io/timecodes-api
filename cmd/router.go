@@ -10,7 +10,7 @@ import (
 	"github.com/rs/cors"
 )
 
-func handleRequests() {
+func startHttpServer() {
 	log.Println("Starting development server at http://127.0.0.1:8080/")
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -23,11 +23,11 @@ func handleRequests() {
 }
 
 func createAnnotation(w http.ResponseWriter, r *http.Request) {
-	var annotation Annotation
+	annotation := &Annotation{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(reqBody, &annotation)
-	err := db.Create(&annotation).Error
+	json.Unmarshal(reqBody, annotation)
+	err := db.Create(annotation).Error
 
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
@@ -37,12 +37,12 @@ func createAnnotation(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAnnotations(w http.ResponseWriter, r *http.Request) {
-	var annotations []Annotation
+	annotations := &[]Annotation{}
 
 	vars := mux.Vars(r)
-	key := vars["videoId"]
+	videoId := vars["videoId"]
 
-	err := db.Where(&Annotation{VideoID: key}).Find(&annotations).Error
+	err := db.Where(&Annotation{VideoID: videoId}).Find(annotations).Error
 
 	if err != nil {
 		json.NewEncoder(w).Encode(err)

@@ -11,5 +11,5 @@ func main() {
 	initDB()
 	createTables()
 	runMigrations()
-	handleRequests()
+	startHttpServer()
 }
