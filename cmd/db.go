@@ -33,11 +33,13 @@ func initDB() {
 }
 
 func createTables() {
-	if !db.HasTable(&Annotation{}) {
-		err := db.CreateTable(&Annotation{})
-		if err != nil {
-			log.Println("Table already exists")
-		}
+	if db.HasTable(&Annotation{}) {
+		return
+	}
+
+	err := db.CreateTable(&Annotation{})
+	if err != nil {
+		log.Println("Table already exists")
 	}
 }
 
