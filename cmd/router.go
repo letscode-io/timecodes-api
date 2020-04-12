@@ -42,7 +42,7 @@ func getAnnotations(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	videoId := vars["videoId"]
 
-	err := db.Where(&Annotation{VideoID: videoId}).Find(annotations).Error
+	err := db.Order("seconds asc").Where(&Annotation{VideoID: videoId}).Find(annotations).Error
 
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
