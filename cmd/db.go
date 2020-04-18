@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 
 	"github.com/jinzhu/gorm"
@@ -10,20 +11,17 @@ import (
 )
 
 func initDB() {
-	user := getEnv("PG_USER", "hugo")
-	password := getEnv("PG_PASSWORD", "")
-	host := getEnv("PG_HOST", "localhost")
-	port := getEnv("PG_PORT", "8080")
-	database := getEnv("PG_DB", "tasks")
-	dbinfo := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-		user,
-		password,
-		host,
-		port,
-		database,
-	)
+	var err error
 
-	db, err = gorm.Open("postgres", dbinfo)
+	dsn := url.URL{
+		User:     url.UserPassword(os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD")),
+		Scheme:   "postgres",
+		Host:     fmt.Sprintf("%s:%s", os.Getenv("PG_HOST"), os.Getenv("PG_PORT")),
+		Path:     os.Getenv("PG_DB"),
+		RawQuery: (&url.Values{"sslmode": []string{"disable"}}).Encode(),
+	}
+
+	db, err = gorm.Open("postgres", dsn.String())
 	if err != nil {
 		log.Println("Failed to connect to database")
 		panic(err)
@@ -45,11 +43,4 @@ func createTables() {
 
 func runMigrations() {
 	db.AutoMigrate(&Annotation{})
-}
-
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
 }
