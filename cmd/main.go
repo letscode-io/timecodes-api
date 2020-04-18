@@ -4,12 +4,16 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-var db *gorm.DB
-var err error
+var (
+	db *gorm.DB
+)
 
-func main() {
+func init() {
 	initDB()
 	createTables()
 	runMigrations()
+}
+
+func main() {
 	startHttpServer()
 }
