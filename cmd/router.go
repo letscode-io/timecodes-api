@@ -1,8 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -16,37 +15,15 @@ func startHttpServer() {
 
 	handler := cors.Default().Handler(router)
 
-	router.HandleFunc("/annotation", createAnnotation).Methods("POST")
+	router.HandleFunc("/", handleHome)
+
+	// annotations
+	router.HandleFunc("/annotations", createAnnotation).Methods("POST")
 	router.HandleFunc("/annotations/{videoId}", getAnnotations)
 
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
 
-func createAnnotation(w http.ResponseWriter, r *http.Request) {
-	annotation := &Annotation{}
-
-	reqBody, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(reqBody, annotation)
-	err := db.Create(annotation).Error
-
-	if err != nil {
-		json.NewEncoder(w).Encode(err)
-	} else {
-		json.NewEncoder(w).Encode(annotation)
-	}
-}
-
-func getAnnotations(w http.ResponseWriter, r *http.Request) {
-	annotations := &[]Annotation{}
-
-	vars := mux.Vars(r)
-	videoId := vars["videoId"]
-
-	err := db.Order("seconds asc").Where(&Annotation{VideoID: videoId}).Find(annotations).Error
-
-	if err != nil {
-		json.NewEncoder(w).Encode(err)
-	} else {
-		json.NewEncoder(w).Encode(annotations)
-	}
+func handleHome(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "OK")
 }
