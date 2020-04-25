@@ -1,4 +1,4 @@
-# API for Timecodes Chrome extension
+# Backend for Timecodes Chrome extension
 
 # Usage
 
