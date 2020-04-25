@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	timecodeParser "youannoapi/cmd/timecode_parser"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -21,9 +24,21 @@ func startHttpServer() {
 	router.HandleFunc("/annotations", createAnnotation).Methods("POST")
 	router.HandleFunc("/annotations/{videoId}", getAnnotations)
 
+	router.HandleFunc("/parse_description/{videoId}", parseDescription)
+
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK")
+}
+
+func parseDescription(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	videoId := vars["videoId"]
+
+	description := getVideoDescription(videoId)
+	timeCodes := timecodeParser.Parse(description)
+
+	json.NewEncoder(w).Encode(timeCodes)
 }
