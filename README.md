@@ -1,4 +1,4 @@
-# Youanno API
+# Backend for Timecodes Chrome extension
 
 # Usage
 
