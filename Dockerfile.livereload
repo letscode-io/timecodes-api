@@ -1,0 +1,23 @@
+FROM golang:alpine AS builder
+
+ENV APP_HOME=/usr/src/app
+
+RUN apk update \
+    && apk upgrade \
+    && apk add --upgrade git \
+    && rm -rf /var/cache/apk/*
+
+RUN mkdir -p $APP_HOME
+
+WORKDIR $APP_HOME
+
+COPY go.mod go.sum $APP_HOME/
+
+RUN go mod download
+
+COPY . $APP_HOME
+
+RUN go get github.com/cosmtrek/air
+
+CMD ["/go/bin/air", "-c", ".air.conf"]
+
