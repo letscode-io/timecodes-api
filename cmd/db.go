@@ -43,4 +43,5 @@ func createTables() {
 
 func runMigrations() {
 	db.AutoMigrate(&Annotation{})
+	db.Model(&Annotation{}).AddUniqueIndex("idx_seconds_text_video_id", "seconds", "text", "video_id")
 }
