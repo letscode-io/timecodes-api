@@ -31,17 +31,20 @@ func initDB() {
 }
 
 func createTables() {
-	if db.HasTable(&Annotation{}) {
+	if db.HasTable(&Timecode{}) {
 		return
 	}
 
-	err := db.CreateTable(&Annotation{})
+	err := db.CreateTable(&Timecode{})
 	if err != nil {
 		log.Println("Table already exists")
 	}
 }
 
 func runMigrations() {
-	db.AutoMigrate(&Annotation{})
-	db.Model(&Annotation{}).AddUniqueIndex("idx_seconds_text_video_id", "seconds", "text", "video_id")
+	db.AutoMigrate(&Timecode{})
+	db.Model(&Timecode{}).AddUniqueIndex(
+		"idx_seconds_text_video_id",
+		"seconds", "description", "video_id",
+	)
 }

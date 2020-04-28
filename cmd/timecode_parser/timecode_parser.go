@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	minCandidates       = 3
 	secondsInMin        = 60
 	timeCodeRegExStr    = `\b(?:\d*:)?[0-5]?[0-9]:(?:[0-5][0-9])\b`
 	noisyPrefixRegExStr = `^[^a-zA-Z0-9_]+`
@@ -46,7 +47,7 @@ func findCandidates(description string) (list []string) {
 }
 
 func parseTimeCodes(candidates []string) (collection []ParsedTimeCode) {
-	if len(candidates) < 3 {
+	if len(candidates) < minCandidates {
 		return collection
 	}
 

@@ -10,41 +10,41 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GET /annotations
-func getAnnotations(w http.ResponseWriter, r *http.Request) {
-	annotations := &[]Annotation{}
+// GET /timecodes
+func getTimecodes(w http.ResponseWriter, r *http.Request) {
+	timecodes := &[]Timecode{}
 
 	vars := mux.Vars(r)
 	videoId := vars["videoId"]
 
-	err := db.Order("seconds asc").Where(&Annotation{VideoID: videoId}).Find(annotations).Error
+	err := db.Order("seconds asc").Where(&Timecode{VideoID: videoId}).Find(timecodes).Error
 
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
 	} else {
-		if len(*annotations) == 0 {
+		if len(*timecodes) == 0 {
 			go func() {
 				parseDescriptionAndCreateAnnotations(videoId)
 				parseCommentsAndCreateAnnotations(videoId)
 			}()
 		}
 
-		json.NewEncoder(w).Encode(annotations)
+		json.NewEncoder(w).Encode(timecodes)
 	}
 }
 
-// POST /annotations
-func createAnnotation(w http.ResponseWriter, r *http.Request) {
-	annotation := &Annotation{}
+// POST /timecodes
+func createTimecode(w http.ResponseWriter, r *http.Request) {
+	timecode := &Timecode{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(reqBody, annotation)
-	err := db.Create(annotation).Error
+	json.Unmarshal(reqBody, timecode)
+	err := db.Create(timecode).Error
 
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
 	} else {
-		json.NewEncoder(w).Encode(annotation)
+		json.NewEncoder(w).Encode(timecode)
 	}
 }
 
@@ -53,8 +53,8 @@ func parseDescriptionAndCreateAnnotations(videoId string) {
 	parsedCodes := timecodeParser.Parse(description)
 
 	for _, code := range parsedCodes {
-		annotation := &Annotation{Seconds: code.Seconds, VideoID: videoId, Text: code.Description}
-		err := db.Create(annotation).Error
+		timecode := &Timecode{Seconds: code.Seconds, VideoID: videoId, Description: code.Description}
+		err := db.Create(timecode).Error
 		if err != nil {
 			log.Println(err)
 		}
@@ -76,7 +76,7 @@ func parseCommentsAndCreateAnnotations(videoId string) {
 	}
 
 	for _, code := range parsedCodes {
-		annotation := &Annotation{Seconds: code.Seconds, VideoID: videoId, Text: code.Description}
+		annotation := &Timecode{Seconds: code.Seconds, VideoID: videoId, Description: code.Description}
 		err := db.Create(annotation).Error
 		if err != nil {
 			log.Println(err)
