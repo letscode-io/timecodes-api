@@ -52,13 +52,7 @@ func parseDescriptionAndCreateAnnotations(videoId string) {
 	description := getVideoDescription(videoId)
 	parsedCodes := timecodeParser.Parse(description)
 
-	for _, code := range parsedCodes {
-		timecode := &Timecode{Seconds: code.Seconds, VideoID: videoId, Description: code.Description}
-		err := db.Create(timecode).Error
-		if err != nil {
-			log.Println(err)
-		}
-	}
+	createTimecodes(parsedCodes, videoId)
 }
 
 func parseCommentsAndCreateAnnotations(videoId string) {
@@ -67,6 +61,8 @@ func parseCommentsAndCreateAnnotations(videoId string) {
 	comments, err := fetchVideoComments(videoId)
 	if err != nil {
 		log.Println(err)
+
+		return
 	}
 
 	for _, comment := range comments {
@@ -75,7 +71,20 @@ func parseCommentsAndCreateAnnotations(videoId string) {
 		parsedCodes = append(parsedCodes, timeCodes...)
 	}
 
-	for _, code := range parsedCodes {
+	createTimecodes(parsedCodes, videoId)
+}
+
+func createTimecodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoId string) {
+	seen := make(map[string]struct{}, 0)
+
+	for _, code := range parsedTimecodes {
+		key := string(code.Seconds) + code.Description
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+
 		annotation := &Timecode{Seconds: code.Seconds, VideoID: videoId, Description: code.Description}
 		err := db.Create(annotation).Error
 		if err != nil {
