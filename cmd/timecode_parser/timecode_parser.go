@@ -1,6 +1,7 @@
 package timecodeparser
 
 import (
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -8,11 +9,10 @@ import (
 )
 
 const (
-	minCandidates       = 3
-	secondsInMin        = 60
-	timeCodeRegExStr    = `\b(?:\d*:)?[0-5]?[0-9]:(?:[0-5][0-9])\b`
-	noisyPrefixRegExStr = `^[^a-zA-Z0-9_]+`
-	noisySuffixRegExStr = `\s[^\w]+$` // NOTE: This works only with a-z characters
+	minCandidates     = 3
+	secondsInMin      = 60
+	timeCodeRegExStr  = `\b(?:\d*:)?[0-5]?[0-9]:(?:[0-5][0-9])\b`
+	specialCharacters = `[$&+,:;=?@#|'<>.^*()%!-]`
 )
 
 var timeCodeRegEx *regexp.Regexp
@@ -26,8 +26,8 @@ type ParsedTimeCode struct {
 
 func Parse(rawText string) (collection []ParsedTimeCode) {
 	timeCodeRegEx = regexp.MustCompile(timeCodeRegExStr)
-	noisyPrefixRegEx = regexp.MustCompile(noisyPrefixRegExStr)
-	noisySuffixRegEx = regexp.MustCompile(noisySuffixRegExStr)
+	noisyPrefixRegEx = regexp.MustCompile(fmt.Sprintf(`^%s\s+`, specialCharacters))
+	noisySuffixRegEx = regexp.MustCompile(fmt.Sprintf(`\s%s+$`, specialCharacters))
 
 	candidates := findCandidates(rawText)
 
