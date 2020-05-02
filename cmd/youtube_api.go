@@ -13,9 +13,16 @@ func getVideoDescription(videoId string) string {
 	response, err := call.Do()
 	if err != nil {
 		log.Println(err)
+
+		return ""
 	}
 
-	return response.Items[0].Snippet.Description
+	items := response.Items
+	if len(items) == 0 {
+		return ""
+	}
+
+	return items[0].Snippet.Description
 }
 
 func fetchVideoComments(videoId string) ([]*youtube.CommentThread, error) {
