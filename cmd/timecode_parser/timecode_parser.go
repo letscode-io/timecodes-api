@@ -70,14 +70,10 @@ func parseTimeCodes(candidates []string) (collection []ParsedTimeCode) {
 func fetchDescription(texts []string) string {
 	var description string
 
-	if len(texts) == 2 {
-		if len(texts[0]) > len(texts[1]) {
-			description = texts[0]
-		} else {
-			description = texts[1]
-		}
-	} else {
+	if len(texts[0]) > len(texts[1]) {
 		description = texts[0]
+	} else {
+		description = texts[1]
 	}
 
 	description = strings.TrimSpace(description)
