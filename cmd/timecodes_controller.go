@@ -75,7 +75,7 @@ func parseCommentsAndCreateAnnotations(videoId string) {
 }
 
 func createTimecodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoId string) {
-	seen := make(map[string]struct{}, 0)
+	seen := make(map[string]struct{})
 
 	for _, code := range parsedTimecodes {
 		key := string(code.Seconds) + code.Description
