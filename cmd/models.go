@@ -13,11 +13,17 @@ type Timecode struct {
 
 type User struct {
 	gorm.Model
+	AccessToken AccessToken
+}
+
+type AccessToken struct {
+	gorm.Model
+	Value  string `gorm:"not null;unique_index"`
+	UserID uint   `gorm:"not null;index"`
 }
 
 type TimecodeLike struct {
 	gorm.Model
-	TimecodeID uint   `gorm:"not null"`
-	UserID     uint   `gorm:"not null"`
-	VideoID    string `gorm:"not null"`
+	TimecodeID uint `json:"timecodeId" gorm:"not null"`
+	UserID     uint `json:"userId" gorm:"not null"`
 }

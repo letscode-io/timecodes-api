@@ -48,9 +48,10 @@ func runMigrations() {
 		"seconds", "description", "video_id",
 	)
 	db.AutoMigrate(&User{})
+	db.AutoMigrate(&AccessToken{})
 	db.AutoMigrate(&TimecodeLike{})
 	db.Model(&TimecodeLike{}).AddUniqueIndex(
 		"idx_timecodes_likes_user_id_timecode_id_video_id",
-		"user_id", "timecode_id", "video_id",
+		"user_id", "timecode_id",
 	)
 }
