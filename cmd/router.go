@@ -20,9 +20,12 @@ func startHttpServer() {
 	// home
 	router.HandleFunc("/", handleHome)
 
-	// annotations
+	// timecodes
 	router.HandleFunc("/timecodes", createTimecode).Methods("POST")
 	router.HandleFunc("/timecodes/{videoId}", getTimecodes)
+
+	// timecode_likes
+	router.HandleFunc("/timecode_likes", handleCreateTimecodeLike).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
