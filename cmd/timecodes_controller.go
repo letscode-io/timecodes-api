@@ -10,14 +10,24 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type TimecodeJSON struct {
+	Description string `json:"description"`
+	LikesCount  int    `json:"likesCount"`
+	Seconds     int    `json:"seconds"`
+	VideoID     string `json:"videoId"`
+}
+
 // GET /timecodes
 func getTimecodes(w http.ResponseWriter, r *http.Request) {
-	timecodes := &[]Timecode{}
+	timecodes := &[]*Timecode{}
 
-	vars := mux.Vars(r)
-	videoId := vars["videoId"]
+	videoId := mux.Vars(r)["videoId"]
 
-	err := db.Order("seconds asc").Where(&Timecode{VideoID: videoId}).Find(timecodes).Error
+	err := db.Order("seconds asc").
+		Preload("Likes").
+		Where(&Timecode{VideoID: videoId}).
+		Find(timecodes).
+		Error
 
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
@@ -29,7 +39,12 @@ func getTimecodes(w http.ResponseWriter, r *http.Request) {
 			}()
 		}
 
-		json.NewEncoder(w).Encode(timecodes)
+		timecodeJSONCollection := make([]*TimecodeJSON, 0)
+		for _, timecode := range *timecodes {
+			timecodeJSONCollection = append(timecodeJSONCollection, serializeTimecode(timecode))
+		}
+
+		json.NewEncoder(w).Encode(timecodeJSONCollection)
 	}
 }
 
@@ -44,7 +59,16 @@ func createTimecode(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
 	} else {
-		json.NewEncoder(w).Encode(timecode)
+		json.NewEncoder(w).Encode(serializeTimecode(timecode))
+	}
+}
+
+func serializeTimecode(timecode *Timecode) (timecodeJSON *TimecodeJSON) {
+	return &TimecodeJSON{
+		Description: timecode.Description,
+		LikesCount:  len(timecode.Likes),
+		Seconds:     timecode.Seconds,
+		VideoID:     timecode.VideoID,
 	}
 }
 

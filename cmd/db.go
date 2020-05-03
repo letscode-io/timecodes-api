@@ -44,7 +44,14 @@ func createTables() {
 func runMigrations() {
 	db.AutoMigrate(&Timecode{})
 	db.Model(&Timecode{}).AddUniqueIndex(
-		"idx_seconds_text_video_id",
+		"idx_timecodes_seconds_text_video_id",
 		"seconds", "description", "video_id",
+	)
+	db.AutoMigrate(&User{})
+	db.AutoMigrate(&AccessToken{})
+	db.AutoMigrate(&TimecodeLike{})
+	db.Model(&TimecodeLike{}).AddUniqueIndex(
+		"idx_timecodes_likes_user_id_timecode_id_video_id",
+		"user_id", "timecode_id",
 	)
 }
