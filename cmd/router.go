@@ -15,18 +15,23 @@ func startHttpServer() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(commonMiddleware)
 
-	handler := cors.Default().Handler(router)
-
-	// home
+	// public
 	router.HandleFunc("/", handleHome)
-
-	// timecodes
-	router.HandleFunc("/timecodes", createTimecode).Methods(http.MethodPost)
 	router.HandleFunc("/timecodes/{videoId}", getTimecodes)
 
-	// timecode_likes
-	router.HandleFunc("/timecode_likes", handleCreateTimecodeLike).Methods(http.MethodPost)
-	router.HandleFunc("/timecode_likes", handleDeleteTimecodeLike).Methods(http.MethodDelete)
+	// auth
+	auth := router.PathPrefix("/auth").Subrouter()
+	auth.Use(authMiddleware)
+
+	auth.HandleFunc("/login", handleLogin)
+
+	auth.HandleFunc("/timecodes", createTimecode).Methods(http.MethodPost)
+	auth.HandleFunc("/timecodes/{videoId}", getTimecodes)
+
+	auth.HandleFunc("/timecode_likes", handleCreateTimecodeLike).Methods(http.MethodPost)
+	auth.HandleFunc("/timecode_likes", handleDeleteTimecodeLike).Methods(http.MethodDelete)
+
+	handler := cors.Default().Handler(router)
 
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
@@ -40,4 +45,13 @@ func commonMiddleware(next http.Handler) http.Handler {
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK")
+}
+
+func getCurrentUser(r *http.Request) *User {
+	user := r.Context().Value(CurrentUserKey{})
+	if user != nil {
+		return user.(*User)
+	}
+
+	return nil
 }
