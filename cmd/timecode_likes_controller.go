@@ -8,7 +8,8 @@ import (
 )
 
 func handleCreateTimecodeLike(w http.ResponseWriter, r *http.Request) {
-	like := &TimecodeLike{}
+	currentUser := getCurrentUser(r)
+	like := &TimecodeLike{UserID: currentUser.ID}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(reqBody, like)
@@ -27,6 +28,7 @@ func handleCreateTimecodeLike(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDeleteTimecodeLike(w http.ResponseWriter, r *http.Request) {
+	currentUser := getCurrentUser(r)
 	likeParams := &TimecodeLike{}
 	like := &TimecodeLike{}
 
@@ -37,7 +39,7 @@ func handleDeleteTimecodeLike(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.Where(&TimecodeLike{UserID: likeParams.UserID, TimecodeID: likeParams.TimecodeID}).First(like).Error
+	err = db.Where(&TimecodeLike{UserID: currentUser.ID, TimecodeID: likeParams.TimecodeID}).First(like).Error
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
 		return
