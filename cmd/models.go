@@ -13,13 +13,9 @@ type Timecode struct {
 
 type User struct {
 	gorm.Model
-	AccessToken AccessToken
-}
-
-type AccessToken struct {
-	gorm.Model
-	Value  string `gorm:"not null;unique_index"`
-	UserID uint   `gorm:"not null;index"`
+	Email      string
+	GoogleID   string
+	PictureURL string
 }
 
 type TimecodeLike struct {
