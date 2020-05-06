@@ -16,7 +16,7 @@ func authMiddleware(next http.Handler) http.Handler {
 
 		userInfo, err := fetchUserInfo(token)
 		if err != nil {
-			http.Error(w, http.StatusText(401), 401)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 
