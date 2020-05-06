@@ -17,7 +17,7 @@ func startHttpServer() {
 
 	// public
 	router.HandleFunc("/", handleHome)
-	router.HandleFunc("/timecodes/{videoId}", getTimecodes)
+	router.HandleFunc("/timecodes/{videoId}", handleGetTimecodes)
 
 	// auth
 	auth := router.PathPrefix("/auth").Subrouter()
@@ -25,8 +25,8 @@ func startHttpServer() {
 
 	auth.HandleFunc("/login", handleLogin)
 
-	auth.HandleFunc("/timecodes", createTimecode).Methods(http.MethodPost)
-	auth.HandleFunc("/timecodes/{videoId}", getTimecodes)
+	auth.HandleFunc("/timecodes", handleCreateTimecode).Methods(http.MethodPost)
+	auth.HandleFunc("/timecodes/{videoId}", handleGetTimecodes)
 
 	auth.HandleFunc("/timecode_likes", handleCreateTimecodeLike).Methods(http.MethodPost)
 	auth.HandleFunc("/timecode_likes", handleDeleteTimecodeLike).Methods(http.MethodDelete)

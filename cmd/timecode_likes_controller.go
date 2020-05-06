@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// POST /timecode_likes
 func handleCreateTimecodeLike(w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	like := &TimecodeLike{UserID: currentUser.ID}
@@ -27,6 +28,7 @@ func handleCreateTimecodeLike(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DELETE /timecode_likes
 func handleDeleteTimecodeLike(w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	likeParams := &TimecodeLike{}

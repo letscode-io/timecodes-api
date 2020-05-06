@@ -20,7 +20,7 @@ type TimecodeJSON struct {
 }
 
 // GET /timecodes
-func getTimecodes(w http.ResponseWriter, r *http.Request) {
+func handleGetTimecodes(w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	timecodes := &[]*Timecode{}
 	videoId := mux.Vars(r)["videoId"]
@@ -51,7 +51,7 @@ func getTimecodes(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /timecodes
-func createTimecode(w http.ResponseWriter, r *http.Request) {
+func handleCreateTimecode(w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	timecode := &Timecode{}
 
