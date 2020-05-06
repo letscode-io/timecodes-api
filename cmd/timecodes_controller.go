@@ -93,7 +93,7 @@ func getLikedByMe(likes []TimecodeLike, userID uint) bool {
 }
 
 func parseDescriptionAndCreateAnnotations(videoId string) {
-	description := getVideoDescription(videoId)
+	description := fetchVideoDescription(videoId)
 	parsedCodes := timecodeParser.Parse(description)
 
 	createTimecodes(parsedCodes, videoId)

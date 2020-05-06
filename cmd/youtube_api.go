@@ -6,9 +6,11 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-func getVideoDescription(videoId string) string {
-	call := youtubeService.Videos.List("snippet")
-	call = call.Id(videoId)
+func fetchVideoDescription(videoId string) string {
+	call := youtubeService.
+		Videos.
+		List("snippet").
+		Id(videoId)
 
 	response, err := call.Do()
 	if err != nil {
@@ -26,10 +28,12 @@ func getVideoDescription(videoId string) string {
 }
 
 func fetchVideoComments(videoId string) ([]*youtube.CommentThread, error) {
-	call := youtubeService.CommentThreads.List("snippet")
-	call = call.VideoId(videoId)
-	call = call.Order("relevance")
-	call = call.MaxResults(100)
+	call := youtubeService.
+		CommentThreads.
+		List("snippet").
+		VideoId(videoId).
+		Order("relevance").
+		MaxResults(100)
 
 	response, err := call.Do()
 	if err != nil {
