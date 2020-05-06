@@ -11,16 +11,18 @@ import (
 )
 
 type TimecodeJSON struct {
+	ID          uint   `json:"id"`
 	Description string `json:"description"`
 	LikesCount  int    `json:"likesCount"`
+	LikedByMe   bool   `json:"likedByMe"`
 	Seconds     int    `json:"seconds"`
 	VideoID     string `json:"videoId"`
 }
 
 // GET /timecodes
-func getTimecodes(w http.ResponseWriter, r *http.Request) {
+func handleGetTimecodes(w http.ResponseWriter, r *http.Request) {
+	currentUser := getCurrentUser(r)
 	timecodes := &[]*Timecode{}
-
 	videoId := mux.Vars(r)["videoId"]
 
 	err := db.Order("seconds asc").
@@ -41,7 +43,7 @@ func getTimecodes(w http.ResponseWriter, r *http.Request) {
 
 		timecodeJSONCollection := make([]*TimecodeJSON, 0)
 		for _, timecode := range *timecodes {
-			timecodeJSONCollection = append(timecodeJSONCollection, serializeTimecode(timecode))
+			timecodeJSONCollection = append(timecodeJSONCollection, serializeTimecode(timecode, currentUser))
 		}
 
 		json.NewEncoder(w).Encode(timecodeJSONCollection)
@@ -49,7 +51,8 @@ func getTimecodes(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /timecodes
-func createTimecode(w http.ResponseWriter, r *http.Request) {
+func handleCreateTimecode(w http.ResponseWriter, r *http.Request) {
+	currentUser := getCurrentUser(r)
 	timecode := &Timecode{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -59,21 +62,38 @@ func createTimecode(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
 	} else {
-		json.NewEncoder(w).Encode(serializeTimecode(timecode))
+		json.NewEncoder(w).Encode(serializeTimecode(timecode, currentUser))
 	}
 }
 
-func serializeTimecode(timecode *Timecode) (timecodeJSON *TimecodeJSON) {
+func serializeTimecode(timecode *Timecode, currentUser *User) (timecodeJSON *TimecodeJSON) {
+	var likedByMe bool
+	if currentUser != nil {
+		likedByMe = getLikedByMe(timecode.Likes, currentUser.ID)
+	}
+
 	return &TimecodeJSON{
+		ID:          timecode.ID,
 		Description: timecode.Description,
 		LikesCount:  len(timecode.Likes),
+		LikedByMe:   likedByMe,
 		Seconds:     timecode.Seconds,
 		VideoID:     timecode.VideoID,
 	}
 }
 
+func getLikedByMe(likes []TimecodeLike, userID uint) bool {
+	for _, like := range likes {
+		if like.UserID == userID {
+			return true
+		}
+	}
+
+	return false
+}
+
 func parseDescriptionAndCreateAnnotations(videoId string) {
-	description := getVideoDescription(videoId)
+	description := fetchVideoDescription(videoId)
 	parsedCodes := timecodeParser.Parse(description)
 
 	createTimecodes(parsedCodes, videoId)
