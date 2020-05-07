@@ -94,7 +94,7 @@ func getLikedByMe(likes []TimecodeLike, userID uint) bool {
 }
 
 func parseDescriptionAndCreateAnnotations(videoId string) {
-	description := fetchVideoDescription(videoId)
+	description := youtubeService.FetchVideoDescription(videoId)
 	parsedCodes := timecodeParser.Parse(description)
 
 	createTimecodes(parsedCodes, videoId)
@@ -103,7 +103,7 @@ func parseDescriptionAndCreateAnnotations(videoId string) {
 func parseCommentsAndCreateAnnotations(videoId string) {
 	var parsedCodes []timecodeParser.ParsedTimeCode
 
-	comments, err := fetchVideoComments(videoId)
+	comments, err := youtubeService.FetchVideoComments(videoId)
 	if err != nil {
 		log.Println(err)
 

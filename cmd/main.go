@@ -1,18 +1,14 @@
 package main
 
 import (
-	"context"
-	"log"
-	"os"
-
 	"github.com/jinzhu/gorm"
-	"google.golang.org/api/option"
-	"google.golang.org/api/youtube/v3"
+
+	youtubeAPI "timecodes/cmd/youtube_api"
 )
 
 var (
 	db             *gorm.DB
-	youtubeService *youtube.Service
+	youtubeService *youtubeAPI.Service
 )
 
 func init() {
@@ -23,12 +19,7 @@ func init() {
 }
 
 func initYoutubeService() {
-	var err error
-	ctx := context.Background()
-	youtubeService, err = youtube.NewService(ctx, option.WithAPIKey(os.Getenv("GOOGLE_API_KEY")))
-	if err != nil {
-		log.Println(err)
-	}
+	youtubeService = youtubeAPI.New()
 }
 
 func main() {
