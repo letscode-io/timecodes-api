@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"regexp"
+
+	googleAPI "timecodes/cmd/google_api"
 )
 
 var authTokenRegExp = regexp.MustCompile(`Bearer (\S+$)`)
@@ -14,7 +16,7 @@ func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := getAuthToken(r.Header.Get("Authorization"))
 
-		userInfo, err := fetchUserInfo(token)
+		userInfo, err := googleAPI.FetchUserInfo(token)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
@@ -39,7 +41,7 @@ func getAuthToken(authorizationHeader string) string {
 	return string(token)
 }
 
-func findOrCreateUser(userInfo *UserInfo) *User {
+func findOrCreateUser(userInfo *googleAPI.UserInfo) *User {
 	currentUser := &User{}
 
 	db.Where(User{GoogleID: userInfo.Id}).

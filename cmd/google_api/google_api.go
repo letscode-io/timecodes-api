@@ -1,4 +1,4 @@
-package main
+package googleapi
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ type UserInfo struct {
 	Email   string `json:"email"`
 }
 
-func fetchUserInfo(accessToken string) (userInfo *UserInfo, err error) {
+func FetchUserInfo(accessToken string) (userInfo *UserInfo, err error) {
 	if len(accessToken) == 0 {
 		return nil, errors.New("accessToken cannot be empty")
 	}
