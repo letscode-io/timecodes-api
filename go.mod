@@ -1,4 +1,4 @@
-module youannoapi
+module timecodes
 
 go 1.13
 

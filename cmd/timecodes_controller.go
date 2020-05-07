@@ -5,9 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	timecodeParser "youannoapi/cmd/timecode_parser"
 
 	"github.com/gorilla/mux"
+
+	timecodeParser "timecodes/cmd/timecode_parser"
 )
 
 type TimecodeJSON struct {
