@@ -22,6 +22,7 @@ services:
     depends_on:
       - db
       - nginx
+      - certbot
     env_file:
       - .env
     ports:

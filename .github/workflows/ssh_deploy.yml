@@ -1,5 +1,8 @@
 name: Deploy to Digital Ocean
-on: [push]
+on:
+  push:
+    branches:
+      - master
 jobs:
   build:
     name: Build
@@ -19,9 +22,5 @@ jobs:
             cd /home/deploy/applications/timecodes/timecodes-api
             git checkout master
             git pull
-            echo $DEPLOY_PASSWORD | sudo -S -k docker-compose build app
-            echo $DEPLOY_PASSWORD | sudo -S -k docker-compose build certbot
-            echo $DEPLOY_PASSWORD | sudo -S docker-compose up --no-deps -d db
-            echo $DEPLOY_PASSWORD | sudo -S docker-compose up --no-deps -d app
-            echo $DEPLOY_PASSWORD | sudo -S docker-compose up --no-deps -d nginx
-            echo $DEPLOY_PASSWORD | sudo -S docker-compose up --no-deps -d certbot
+            echo $DEPLOY_PASSWORD | sudo -S docker-compose build app
+            echo $DEPLOY_PASSWORD | sudo -S docker-compose up -d app
