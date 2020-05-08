@@ -21,6 +21,7 @@ services:
       target: final
     depends_on:
       - db
+      - nginx
     env_file:
       - .env
     ports:
@@ -34,23 +35,20 @@ services:
     ports:
       - 9000:5432
   nginx:
+    image: nginx:latest
     restart: always
-    build:
-      context: ./data/nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./data/nginx:/etc/nginx/conf.d
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
+      - ./support/nginx:/etc/nginx/conf.d
+      - ./support/certbot/conf:/etc/letsencrypt
+      - ./support/certbot/www:/var/www/certbot
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-    depends_on:
-      - app
   certbot:
     image: certbot/certbot
     restart: unless-stopped
     volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
+      - ./support/certbot/conf:/etc/letsencrypt
+      - ./support/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
