@@ -13,4 +13,3 @@ RUN go mod download
 COPY . $APP_HOME
 
 CMD ["/go/bin/air", "-c", ".air.conf"]
-

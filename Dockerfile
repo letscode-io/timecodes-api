@@ -17,12 +17,11 @@ RUN go mod download
 
 COPY . $APP_HOME
 
-WORKDIR $APP_HOME/cmd
-RUN go build -o $APP_HOME/application
+RUN CGO_ENABLED=0 GOOS=linux go build -o $APP_HOME/application $APP_HOME/cmd
 
 # Final stage
 
-FROM alpine
+FROM alpine AS final
 
 ENV APP_HOME=/usr/src/app
 
