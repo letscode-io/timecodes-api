@@ -4,11 +4,10 @@ on:
     branches:
       - master
 jobs:
-  build:
-    name: Build
+  deployment:
     runs-on: ubuntu-latest
     steps:
-      - name: ssh key passphrase
+      - name: Connect by ssh and rebuild docker image
         uses: appleboy/ssh-action@master
         env:
           DEPLOY_PASSWORD: ${{ secrets.PASSWORD }}
