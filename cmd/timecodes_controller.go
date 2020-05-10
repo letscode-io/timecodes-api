@@ -48,9 +48,12 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 	timecode := &Timecode{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(reqBody, timecode)
-	_, err := c.TimecodeRepository.Create(timecode)
-
+	err := json.Unmarshal(reqBody, timecode)
+	if err != nil {
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	_, err = c.TimecodeRepository.Create(timecode)
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
 	} else {

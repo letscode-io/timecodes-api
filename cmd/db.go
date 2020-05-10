@@ -32,7 +32,7 @@ func createDatabase(dbName string) *gorm.DB {
 		handleDBConnectionError(err)
 	}
 
-	db = db.Exec(fmt.Sprintf("CREATE DATABASE %s;", dbName))
+	err = db.Exec(fmt.Sprintf("CREATE DATABASE %s;", dbName)).Error
 	if err != nil {
 		handleDBConnectionError(err)
 	}

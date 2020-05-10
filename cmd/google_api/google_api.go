@@ -46,8 +46,12 @@ func FetchUserInfo(accessToken string) (userInfo *UserInfo, err error) {
 	switch response.StatusCode {
 	case 401:
 		apiError := &APIError{}
-		json.Unmarshal(contents, apiError)
-		userInfo, err = nil, apiError
+		unmarshalErr := json.Unmarshal(contents, apiError)
+		if unmarshalErr != nil {
+			return nil, unmarshalErr
+		}
+
+		err = apiError
 	default:
 		userInfo = &UserInfo{}
 		err = nil
