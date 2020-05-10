@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	timecodeParser "timecodes/cmd/timecode_parser"
 
 	"github.com/jinzhu/gorm"
@@ -49,7 +50,7 @@ func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timeco
 	var collection []*Timecode
 	var err error
 	for _, code := range parsedTimecodes {
-		key := string(code.Seconds) + code.Description
+		key := strconv.Itoa(code.Seconds) + code.Description
 		if _, ok := seen[key]; ok {
 			continue
 		}

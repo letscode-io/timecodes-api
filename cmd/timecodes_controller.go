@@ -30,10 +30,7 @@ func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(err)
 	} else {
 		if len(*timecodes) == 0 {
-			go func() {
-				parseDescriptionAndCreateAnnotations(c, videoID)
-				parseCommentsAndCreateAnnotations(c, videoID)
-			}()
+			go parseVideoContentAndCreateTimecodes(c, videoID)
 		}
 
 		timecodeJSONCollection := make([]*TimecodeJSON, 0)
@@ -87,33 +84,19 @@ func getLikedByMe(likes []TimecodeLike, userID uint) bool {
 	return false
 }
 
-func parseDescriptionAndCreateAnnotations(c *Container, videoID string) {
+func parseVideoContentAndCreateTimecodes(c *Container, videoID string) {
 	description := c.YoutubeAPI.FetchVideoDescription(videoID)
 	parsedCodes := timecodeParser.Parse(description)
 
-	_, err := c.TimecodeRepository.CreateFromParsedCodes(parsedCodes, videoID)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func parseCommentsAndCreateAnnotations(c *Container, videoID string) {
-	var parsedCodes []timecodeParser.ParsedTimeCode
-
-	comments, err := c.YoutubeAPI.FetchVideoComments(videoID)
-	if err != nil {
-		log.Println(err)
-
-		return
-	}
+	comments := c.YoutubeAPI.FetchVideoComments(videoID)
 
 	for _, comment := range comments {
-		timeCodes := timecodeParser.Parse(comment.Snippet.TopLevelComment.Snippet.TextOriginal)
+		timeCodes := timecodeParser.Parse(comment)
 
 		parsedCodes = append(parsedCodes, timeCodes...)
 	}
 
-	_, err = c.TimecodeRepository.CreateFromParsedCodes(parsedCodes, videoID)
+	_, err := c.TimecodeRepository.CreateFromParsedCodes(parsedCodes, videoID)
 	if err != nil {
 		log.Println(err)
 	}
