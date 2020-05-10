@@ -15,17 +15,11 @@ jobs:
     steps:
       - name: Checkout current branch
         uses: actions/checkout@master
-      - name: Cache
-        uses: actions/cache@v1
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - uses: actions/setup-go@v1
-        with:
-          go-version: '1.13'
-      - name: Run go test
+      - name: docker-compose version
+        run: docker-compose --version
+      - name: Build docker image
         run: |
-          go mod download
-          go test ./... -cover
+          cp .env.example .env
+          docker-compose build app_test
+      - name: Run tests
+        run: docker-compose run app_test go test ./... -cover
