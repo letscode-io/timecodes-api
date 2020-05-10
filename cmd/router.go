@@ -9,7 +9,17 @@ import (
 	"github.com/rs/cors"
 )
 
-func startHttpServer() {
+type Handler struct {
+	*Container
+	H func(c *Container, w http.ResponseWriter, r *http.Request)
+}
+
+// ServeHTTP allows our Handler type to satisfy http.Handler.
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.H(h.Container, w, r)
+}
+
+func startHttpServer(container *Container) {
 	log.Println("Starting development server at http://127.0.0.1:8080/")
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -17,19 +27,19 @@ func startHttpServer() {
 
 	// public
 	router.HandleFunc("/", handleHome)
-	router.HandleFunc("/timecodes/{videoId}", handleGetTimecodes)
+	router.Handle("/timecodes/{videoId}", Handler{container, handleGetTimecodes})
 
 	// auth
 	auth := router.PathPrefix("/auth").Subrouter()
-	auth.Use(authMiddleware)
+	auth.Use(authMiddleware(container))
 
 	auth.HandleFunc("/login", handleLogin)
 
-	auth.HandleFunc("/timecodes", handleCreateTimecode).Methods(http.MethodPost)
-	auth.HandleFunc("/timecodes/{videoId}", handleGetTimecodes)
+	auth.Handle("/timecodes", Handler{container, handleCreateTimecode}).Methods(http.MethodPost)
+	auth.Handle("/timecodes/{videoId}", Handler{container, handleGetTimecodes})
 
-	auth.HandleFunc("/timecode_likes", handleCreateTimecodeLike).Methods(http.MethodPost)
-	auth.HandleFunc("/timecode_likes", handleDeleteTimecodeLike).Methods(http.MethodDelete)
+	auth.Handle("/timecode_likes", Handler{container, handleCreateTimecodeLike}).Methods(http.MethodPost)
+	auth.Handle("/timecode_likes", Handler{container, handleDeleteTimecodeLike}).Methods(http.MethodDelete)
 
 	handler := cors.Default().Handler(router)
 

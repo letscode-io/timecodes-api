@@ -21,24 +21,18 @@ type TimecodeJSON struct {
 }
 
 // GET /timecodes
-func handleGetTimecodes(w http.ResponseWriter, r *http.Request) {
+func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
-	timecodes := &[]*Timecode{}
-	videoId := mux.Vars(r)["videoId"]
+	videoID := mux.Vars(r)["videoId"]
 
-	err := db.Order("seconds asc").
-		Preload("Likes").
-		Where(&Timecode{VideoID: videoId}).
-		Find(timecodes).
-		Error
-
+	timecodes, err := c.TimecodeRepository.FindByVideoId(videoID)
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
 	} else {
 		if len(*timecodes) == 0 {
 			go func() {
-				parseDescriptionAndCreateAnnotations(videoId)
-				parseCommentsAndCreateAnnotations(videoId)
+				parseDescriptionAndCreateAnnotations(c, videoID)
+				parseCommentsAndCreateAnnotations(c, videoID)
 			}()
 		}
 
@@ -52,17 +46,13 @@ func handleGetTimecodes(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /timecodes
-func handleCreateTimecode(w http.ResponseWriter, r *http.Request) {
+func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	timecode := &Timecode{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(reqBody, timecode)
-	if err != nil {
-		json.NewEncoder(w).Encode(err)
-		return
-	}
-	err = db.Create(timecode).Error
+	json.Unmarshal(reqBody, timecode)
+	_, err := c.TimecodeRepository.Create(timecode)
 
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
@@ -97,17 +87,20 @@ func getLikedByMe(likes []TimecodeLike, userID uint) bool {
 	return false
 }
 
-func parseDescriptionAndCreateAnnotations(videoId string) {
-	description := youtubeService.FetchVideoDescription(videoId)
+func parseDescriptionAndCreateAnnotations(c *Container, videoID string) {
+	description := c.YoutubeAPI.FetchVideoDescription(videoID)
 	parsedCodes := timecodeParser.Parse(description)
 
-	createTimecodes(parsedCodes, videoId)
+	_, err := c.TimecodeRepository.CreateFromParsedCodes(parsedCodes, videoID)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
-func parseCommentsAndCreateAnnotations(videoId string) {
+func parseCommentsAndCreateAnnotations(c *Container, videoID string) {
 	var parsedCodes []timecodeParser.ParsedTimeCode
 
-	comments, err := youtubeService.FetchVideoComments(videoId)
+	comments, err := c.YoutubeAPI.FetchVideoComments(videoID)
 	if err != nil {
 		log.Println(err)
 
@@ -120,24 +113,8 @@ func parseCommentsAndCreateAnnotations(videoId string) {
 		parsedCodes = append(parsedCodes, timeCodes...)
 	}
 
-	createTimecodes(parsedCodes, videoId)
-}
-
-func createTimecodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoId string) {
-	seen := make(map[string]struct{})
-
-	for _, code := range parsedTimecodes {
-		key := string(code.Seconds) + code.Description
-		if _, ok := seen[key]; ok {
-			continue
-		}
-
-		seen[key] = struct{}{}
-
-		annotation := &Timecode{Seconds: code.Seconds, VideoID: videoId, Description: code.Description}
-		err := db.Create(annotation).Error
-		if err != nil {
-			log.Println(err)
-		}
+	_, err = c.TimecodeRepository.CreateFromParsedCodes(parsedCodes, videoID)
+	if err != nil {
+		log.Println(err)
 	}
 }
