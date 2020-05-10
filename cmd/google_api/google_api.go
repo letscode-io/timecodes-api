@@ -22,7 +22,7 @@ func FetchUserInfo(accessToken string) (userInfo *UserInfo, err error) {
 	}
 
 	url := fmt.Sprintf("%s?access_token=%s", userInfoHost, accessToken)
-	response, err := http.Get(url)
+	response, err := http.Get(url) // #nosec G107
 	if err != nil {
 		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
 	}
@@ -39,7 +39,10 @@ func FetchUserInfo(accessToken string) (userInfo *UserInfo, err error) {
 	default:
 		userInfo = &UserInfo{}
 		err = nil
-		json.Unmarshal(contents, userInfo)
+		err = json.Unmarshal(contents, userInfo)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return userInfo, err
