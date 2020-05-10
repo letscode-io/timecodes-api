@@ -1,6 +1,21 @@
 version: "3.5"
 
 services:
+  app_test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    depends_on:
+      - db
+    environment:
+      - CGO_ENABLED=0
+    env_file:
+      - .env.test
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/usr/src/app
   app_dev:
     build:
       context: .

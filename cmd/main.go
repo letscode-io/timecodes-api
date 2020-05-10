@@ -8,7 +8,6 @@ import (
 
 func main() {
 	db := initDB()
-	createTables(db)
 	runMigrations(db)
 
 	youtubeAPI, err := youtubeAPI.New()

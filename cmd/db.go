@@ -6,40 +6,59 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/DATA-DOG/go-txdb"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
+const TXDB_NAME = "txdb_postgres"
+const TXDB_CONNECTION_POOL_NAME = "timecodes_connection_pool"
+
 func initDB() *gorm.DB {
-	var err error
+	envDsn := getDsn(os.Getenv("PG_DB"))
 
-	dsn := url.URL{
-		User:     url.UserPassword(os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD")),
-		Scheme:   "postgres",
-		Host:     fmt.Sprintf("%s:%s", os.Getenv("PG_HOST"), os.Getenv("PG_PORT")),
-		Path:     os.Getenv("PG_DB"),
-		RawQuery: (&url.Values{"sslmode": []string{"disable"}}).Encode(),
-	}
-
-	db, err := gorm.Open("postgres", dsn.String())
+	db, err := gorm.Open("postgres", envDsn.String())
 	if err != nil {
-		log.Println("Failed to connect to database")
-		panic(err)
+		db = createDatabase(os.Getenv("PG_DB"))
 	}
-
-	log.Println("DB connection has been established.")
 
 	return db
 }
 
-func createTables(db *gorm.DB) {
-	if db.HasTable(&Timecode{}) {
-		return
+func createDatabase(dbName string) *gorm.DB {
+	defaultDsn := getDsn("postgres")
+	db, err := gorm.Open("postgres", defaultDsn.String())
+	if err != nil {
+		handleDBConnectionError(err)
 	}
 
-	err := db.CreateTable(&Timecode{})
+	db = db.Exec(fmt.Sprintf("CREATE DATABASE %s;", dbName))
 	if err != nil {
-		log.Println("Table already exists")
+		handleDBConnectionError(err)
+	}
+
+	dsn := getDsn(dbName)
+
+	db, err = gorm.Open("postgres", dsn.String())
+	if err != nil {
+		handleDBConnectionError(err)
+	}
+
+	return db
+}
+
+func handleDBConnectionError(err error) {
+	log.Println("Unable to connect to db")
+	panic(err)
+}
+
+func getDsn(path string) url.URL {
+	return url.URL{
+		User:     url.UserPassword(os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD")),
+		Scheme:   "postgres",
+		Host:     fmt.Sprintf("%s:%s", os.Getenv("PG_HOST"), os.Getenv("PG_PORT")),
+		Path:     path,
+		RawQuery: (&url.Values{"sslmode": []string{"disable"}}).Encode(),
 	}
 }
 
@@ -55,4 +74,19 @@ func runMigrations(db *gorm.DB) {
 		"idx_timecodes_likes_user_id_timecode_id_video_id",
 		"user_id", "timecode_id",
 	)
+}
+
+func setupTestDB() *gorm.DB {
+	initDB()
+	dsn := getDsn(os.Getenv("PG_DB"))
+	txdb.Register(TXDB_NAME, "postgres", dsn.String())
+
+	db, err := gorm.Open("postgres", TXDB_NAME, TXDB_CONNECTION_POOL_NAME)
+	if err != nil {
+		handleDBConnectionError(err)
+	}
+
+	runMigrations(db)
+
+	return db
 }
