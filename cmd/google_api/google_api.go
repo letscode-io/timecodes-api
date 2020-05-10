@@ -11,9 +11,19 @@ import (
 const userInfoHost = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 type UserInfo struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Picture string `json:"picture"`
 	Email   string `json:"email"`
+}
+
+type APIError struct {
+	ErrorData struct {
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
+func (e *APIError) Error() string {
+	return e.ErrorData.Message
 }
 
 func FetchUserInfo(accessToken string) (userInfo *UserInfo, err error) {
@@ -35,7 +45,9 @@ func FetchUserInfo(accessToken string) (userInfo *UserInfo, err error) {
 
 	switch response.StatusCode {
 	case 401:
-		userInfo, err = nil, errors.New(string(contents))
+		apiError := &APIError{}
+		json.Unmarshal(contents, apiError)
+		userInfo, err = nil, apiError
 	default:
 		userInfo = &UserInfo{}
 		err = nil

@@ -24,7 +24,7 @@ type DBUserRepository struct {
 func (repo *DBUserRepository) FindOrCreateByGoogleInfo(userInfo *googleAPI.UserInfo) *User {
 	user := &User{}
 
-	repo.DB.Where(User{GoogleID: userInfo.Id}).
+	repo.DB.Where(User{GoogleID: userInfo.ID}).
 		Assign(User{Email: userInfo.Email, PictureURL: userInfo.Picture}).
 		FirstOrCreate(&user)
 
