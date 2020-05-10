@@ -1,27 +1,21 @@
 package main
 
 import (
-	"github.com/jinzhu/gorm"
-
 	youtubeAPI "timecodes/cmd/youtube_api"
 )
 
-var (
-	db             *gorm.DB
-	youtubeService *youtubeAPI.Service
-)
-
-func init() {
-	initDB()
-	createTables()
-	runMigrations()
-	initYoutubeService()
-}
-
-func initYoutubeService() {
-	youtubeService = youtubeAPI.New()
-}
-
 func main() {
-	startHttpServer()
+	db := initDB()
+	createTables(db)
+	runMigrations(db)
+
+	container := &Container{
+		UserRepository:         &DBUserRepository{DB: db},
+		TimecodeRepository:     &DBTimecodeRepository{DB: db},
+		TimecodeLikeRepository: &DBTimecodeLikeRepository{DB: db},
+
+		YoutubeAPI: youtubeAPI.New(),
+	}
+
+	startHttpServer(container)
 }

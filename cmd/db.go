@@ -10,7 +10,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-func initDB() {
+func initDB() *gorm.DB {
 	var err error
 
 	dsn := url.URL{
@@ -21,16 +21,18 @@ func initDB() {
 		RawQuery: (&url.Values{"sslmode": []string{"disable"}}).Encode(),
 	}
 
-	db, err = gorm.Open("postgres", dsn.String())
+	db, err := gorm.Open("postgres", dsn.String())
 	if err != nil {
 		log.Println("Failed to connect to database")
 		panic(err)
 	}
 
 	log.Println("DB connection has been established.")
+
+	return db
 }
 
-func createTables() {
+func createTables(db *gorm.DB) {
 	if db.HasTable(&Timecode{}) {
 		return
 	}
@@ -41,7 +43,7 @@ func createTables() {
 	}
 }
 
-func runMigrations() {
+func runMigrations(db *gorm.DB) {
 	db.AutoMigrate(&Timecode{})
 	db.Model(&Timecode{}).AddUniqueIndex(
 		"idx_timecodes_seconds_text_video_id",
