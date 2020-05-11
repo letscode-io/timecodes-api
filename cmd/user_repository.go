@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	googleAPI "timecodes/cmd/google_api"
 
 	"github.com/jinzhu/gorm"
@@ -19,19 +18,17 @@ type UserRepository interface {
 }
 
 type DBUserRepository struct {
+	UserRepository
+
 	DB *gorm.DB
 }
 
 func (repo *DBUserRepository) FindOrCreateByGoogleInfo(userInfo *googleAPI.UserInfo) *User {
 	user := &User{}
 
-	err := repo.DB.Where(User{GoogleID: userInfo.ID}).
+	repo.DB.Where(User{GoogleID: userInfo.ID}).
 		Assign(User{Email: userInfo.Email, PictureURL: userInfo.Picture}).
-		FirstOrCreate(&user).Error
-	if err != nil {
-		fmt.Println("ERR")
-		fmt.Println(err)
-	}
-	fmt.Println(user)
+		FirstOrCreate(&user)
+
 	return user
 }
