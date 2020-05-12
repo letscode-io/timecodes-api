@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"sync"
 
 	"github.com/DATA-DOG/go-txdb"
 	"github.com/jinzhu/gorm"
@@ -13,6 +14,8 @@ import (
 
 const TXDB_NAME = "txdb_postgres"
 const TXDB_CONNECTION_POOL_NAME = "timecodes_connection_pool"
+
+var doOnce sync.Once
 
 func initDB() *gorm.DB {
 	envDsn := getDsn(os.Getenv("PG_DB"))
@@ -79,7 +82,9 @@ func runMigrations(db *gorm.DB) {
 func setupTestDB() *gorm.DB {
 	initDB()
 	dsn := getDsn(os.Getenv("PG_DB"))
-	txdb.Register(TXDB_NAME, "postgres", dsn.String())
+	doOnce.Do(func() {
+		txdb.Register(TXDB_NAME, "postgres", dsn.String())
+	})
 
 	db, err := gorm.Open("postgres", TXDB_NAME, TXDB_CONNECTION_POOL_NAME)
 	if err != nil {
