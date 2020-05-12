@@ -4,24 +4,40 @@ import (
 	"testing"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 
 	googleAPI "timecodes/cmd/google_api"
 )
 
-var TestDB *gorm.DB
+type UserRepositorySuite struct {
+	suite.Suite
+	DB   *gorm.DB
+	Repo *DBUserRepository
+}
 
-func TestDBUserRepository_FindOrCreateByGoogleInfo(t *testing.T) {
-	TestDB = setupTestDB()
-	defer TestDB.Close()
+func (suite *UserRepositorySuite) ResetDB() {
+	suite.DB.Exec("TRUNCATE TABLE users;")
+}
+
+func (suite *UserRepositorySuite) SetupTest() {
+	db := setupTestDB()
+	suite.DB = db
+	suite.Repo = &DBUserRepository{DB: db}
+}
+
+func TestUserRepositorySuite(t *testing.T) {
+	suite.Run(t, new(UserRepositorySuite))
+}
+
+func (suite *UserRepositorySuite) TestDBUserRepository_FindOrCreateByGoogleInfo() {
+	t := suite.T()
 
 	t.Run("when user doesn't exist", func(t *testing.T) {
 		googleID := "10001"
-		repo := DBUserRepository{DB: TestDB}
 		userInfo := &googleAPI.UserInfo{ID: googleID}
 
-		user := repo.FindOrCreateByGoogleInfo(userInfo)
+		user := suite.Repo.FindOrCreateByGoogleInfo(userInfo)
 
 		assert.Equal(t, "10001", user.GoogleID)
 	})
@@ -29,12 +45,11 @@ func TestDBUserRepository_FindOrCreateByGoogleInfo(t *testing.T) {
 	t.Run("when user exists", func(t *testing.T) {
 		googleID := "10002"
 
-		TestDB.Create(&User{GoogleID: googleID})
+		suite.DB.Create(&User{GoogleID: googleID})
 
-		repo := DBUserRepository{DB: TestDB}
 		userInfo := &googleAPI.UserInfo{ID: googleID}
 
-		user := repo.FindOrCreateByGoogleInfo(userInfo)
+		user := suite.Repo.FindOrCreateByGoogleInfo(userInfo)
 
 		assert.Equal(t, "10002", user.GoogleID)
 	})
