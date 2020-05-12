@@ -17,25 +17,26 @@ type Timecode struct {
 }
 
 type TimecodeRepository interface {
-	FindByVideoId(string) (*[]*Timecode, error)
+	FindByVideoId(string) *[]*Timecode
 	Create(*Timecode) (*Timecode, error)
-	CreateFromParsedCodes([]timecodeParser.ParsedTimeCode, string) (*[]*Timecode, error)
+	CreateFromParsedCodes([]timecodeParser.ParsedTimeCode, string) *[]*Timecode
 }
 
 type DBTimecodeRepository struct {
+	TimecodeRepository
+
 	DB *gorm.DB
 }
 
-func (repo *DBTimecodeRepository) FindByVideoId(videoID string) (*[]*Timecode, error) {
+func (repo *DBTimecodeRepository) FindByVideoId(videoID string) *[]*Timecode {
 	timecodes := &[]*Timecode{}
 
-	err := repo.DB.Order("seconds asc").
+	repo.DB.Order("seconds asc").
 		Preload("Likes").
 		Where(&Timecode{VideoID: videoID}).
-		Find(timecodes).
-		Error
+		Find(timecodes)
 
-	return timecodes, err
+	return timecodes
 }
 
 func (repo *DBTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) {
@@ -44,11 +45,10 @@ func (repo *DBTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) 
 	return timecode, err
 }
 
-func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoId string) (*[]*Timecode, error) {
+func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoId string) *[]*Timecode {
 	seen := make(map[string]struct{})
 
 	var collection []*Timecode
-	var err error
 	for _, code := range parsedTimecodes {
 		key := strconv.Itoa(code.Seconds) + code.Description
 		if _, ok := seen[key]; ok {
@@ -59,12 +59,12 @@ func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timeco
 
 		timecode := &Timecode{Seconds: code.Seconds, VideoID: videoId, Description: code.Description}
 
-		err = repo.DB.Create(timecode).Error
+		err := repo.DB.Create(timecode).Error
 		if err != nil {
 			continue
 		}
 		collection = append(collection, timecode)
 	}
 
-	return &collection, err
+	return &collection
 }

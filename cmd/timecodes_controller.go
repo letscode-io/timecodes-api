@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -25,21 +24,18 @@ func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	videoID := mux.Vars(r)["videoId"]
 
-	timecodes, err := c.TimecodeRepository.FindByVideoId(videoID)
-	if err != nil {
-		json.NewEncoder(w).Encode(err)
-	} else {
-		if len(*timecodes) == 0 {
-			go parseVideoContentAndCreateTimecodes(c, videoID)
-		}
+	timecodes := c.TimecodeRepository.FindByVideoId(videoID)
 
-		timecodeJSONCollection := make([]*TimecodeJSON, 0)
-		for _, timecode := range *timecodes {
-			timecodeJSONCollection = append(timecodeJSONCollection, serializeTimecode(timecode, currentUser))
-		}
-
-		json.NewEncoder(w).Encode(timecodeJSONCollection)
+	if len(*timecodes) == 0 {
+		go parseVideoContentAndCreateTimecodes(c, videoID)
 	}
+
+	timecodeJSONCollection := make([]*TimecodeJSON, 0)
+	for _, timecode := range *timecodes {
+		timecodeJSONCollection = append(timecodeJSONCollection, serializeTimecode(timecode, currentUser))
+	}
+
+	json.NewEncoder(w).Encode(timecodeJSONCollection)
 }
 
 // POST /timecodes
@@ -99,8 +95,5 @@ func parseVideoContentAndCreateTimecodes(c *Container, videoID string) {
 		parsedCodes = append(parsedCodes, timeCodes...)
 	}
 
-	_, err := c.TimecodeRepository.CreateFromParsedCodes(parsedCodes, videoID)
-	if err != nil {
-		log.Println(err)
-	}
+	c.TimecodeRepository.CreateFromParsedCodes(parsedCodes, videoID)
 }
