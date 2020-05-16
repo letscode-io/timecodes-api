@@ -14,6 +14,8 @@ type TimecodeLikeRepository interface {
 }
 
 type DBTimecodeLikeRepository struct {
+	TimecodeLikeRepository
+
 	DB *gorm.DB
 }
 
@@ -31,7 +33,7 @@ func (repo *DBTimecodeLikeRepository) Delete(timecodeLike *TimecodeLike, userID 
 		return nil, err
 	}
 
-	err = repo.DB.Unscoped().Delete(timecodeLike).Error
+	repo.DB.Unscoped().Delete(timecodeLike)
 
-	return timecodeLike, err
+	return timecodeLike, nil
 }

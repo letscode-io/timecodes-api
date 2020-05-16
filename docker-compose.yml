@@ -47,7 +47,8 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=timecodes_db
+    env_file:
+      - .env
     ports:
       - 9000:5432
   nginx:

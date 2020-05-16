@@ -18,14 +18,17 @@ type TimecodeRepositorySuite struct {
 	Repo *DBTimecodeRepository
 }
 
-func (suite *TimecodeRepositorySuite) ResetDB() {
-	suite.DB.Exec("TRUNCATE TABLE timecodes;")
+func (suite *TimecodeRepositorySuite) SetupSuite() {
+	suite.DB = TestDB
+	suite.Repo = &DBTimecodeRepository{DB: TestDB}
 }
 
 func (suite *TimecodeRepositorySuite) SetupTest() {
-	db := setupTestDB()
-	suite.DB = db
-	suite.Repo = &DBTimecodeRepository{DB: db}
+	Cleaner.Acquire("timecodes")
+}
+
+func (suite *TimecodeRepositorySuite) TearDownTest() {
+	Cleaner.Clean("timecodes")
 }
 
 func TestTimecodeRepositorySuite(t *testing.T) {
@@ -39,7 +42,7 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoId() {
 		suite.DB.Create(&Timecode{VideoID: videoID, Seconds: 55, Description: "ABC"})
 		suite.DB.Create(&Timecode{VideoID: videoID, Seconds: 23, Description: "DEFG"})
 		suite.DB.Create(&Timecode{VideoID: anotherVideoID, Seconds: 77, Description: "FGHJ"})
-		defer suite.ResetDB()
+		defer Cleaner.Clean("timecodes")
 
 		timecodes := *suite.Repo.FindByVideoId(videoID)
 
@@ -50,7 +53,6 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoId() {
 
 	t.Run("when there are no matching records", func(t *testing.T) {
 		suite.DB.Create(&Timecode{VideoID: anotherVideoID, Seconds: 77, Description: "FGHJ"})
-		defer suite.ResetDB()
 
 		timecodes := *suite.Repo.FindByVideoId(videoID)
 
@@ -62,8 +64,6 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_Create() {
 	t := suite.T()
 
 	t.Run("when record has been created", func(t *testing.T) {
-		defer suite.ResetDB()
-
 		timecode, err := suite.Repo.Create(&Timecode{VideoID: videoID, Seconds: 55, Description: "ABC"})
 
 		assert.Nil(t, err)
@@ -76,7 +76,6 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_Create() {
 		description := "ABC"
 
 		suite.DB.Create(&Timecode{VideoID: videoID, Seconds: seconds, Description: description})
-		defer suite.ResetDB()
 
 		timecode, err := suite.Repo.Create(&Timecode{VideoID: videoID, Seconds: seconds, Description: description})
 
@@ -92,9 +91,8 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_CreateFromParsedC
 			{Seconds: 24, Description: "ABC"},
 			{Seconds: 56, Description: "DFG"},
 			{Seconds: 56, Description: "DFG"},
-			{Seconds: 56, Description: "DFG"},
+			{Seconds: 56, Description: ""},
 		}
-		defer suite.ResetDB()
 
 		timecodes := *suite.Repo.CreateFromParsedCodes(parsedTimecodes, videoID)
 

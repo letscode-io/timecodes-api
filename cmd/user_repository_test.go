@@ -16,14 +16,17 @@ type UserRepositorySuite struct {
 	Repo *DBUserRepository
 }
 
-func (suite *UserRepositorySuite) ResetDB() {
-	suite.DB.Exec("TRUNCATE TABLE users;")
+func (suite *UserRepositorySuite) SetupSuite() {
+	suite.DB = TestDB
+	suite.Repo = &DBUserRepository{DB: TestDB}
 }
 
 func (suite *UserRepositorySuite) SetupTest() {
-	db := setupTestDB()
-	suite.DB = db
-	suite.Repo = &DBUserRepository{DB: db}
+	Cleaner.Acquire("users")
+}
+
+func (suite *UserRepositorySuite) TearDownTest() {
+	Cleaner.Clean("users")
 }
 
 func TestUserRepositorySuite(t *testing.T) {
