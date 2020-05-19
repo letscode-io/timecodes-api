@@ -35,10 +35,9 @@ func (mr *MockTimecodeLikeRepository) Create(like *TimecodeLike, userID uint) (*
 		return nil, err
 	}
 
-	argLike := args.Get(0).(*TimecodeLike)
-	argLike = like
+	_ = args.Get(0).(*TimecodeLike)
 
-	return argLike, nil
+	return like, nil
 }
 
 func (mr *MockTimecodeLikeRepository) Delete(like *TimecodeLike, userID uint) (*TimecodeLike, error) {
@@ -51,10 +50,9 @@ func (mr *MockTimecodeLikeRepository) Delete(like *TimecodeLike, userID uint) (*
 		return nil, err
 	}
 
-	argLike := args.Get(0).(*TimecodeLike)
-	argLike = like
+	_ = args.Get(0).(*TimecodeLike)
 
-	return argLike, nil
+	return like, nil
 }
 
 func Test_handleCreateTimecodeLike(t *testing.T) {

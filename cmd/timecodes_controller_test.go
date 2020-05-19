@@ -42,10 +42,9 @@ func (m *MockTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) {
 		return nil, err
 	}
 
-	argTimecode := args.Get(0).(*Timecode)
-	argTimecode = timecode
+	_ = args.Get(0).(*Timecode)
 
-	return argTimecode, nil
+	return timecode, nil
 }
 
 func (m *MockTimecodeRepository) CreateFromParsedCodes(parsedCodes []timecodeParser.ParsedTimeCode, videoID string) *[]*Timecode {
