@@ -12,21 +12,31 @@ var authTokenRegExp = regexp.MustCompile(`Bearer (\S+$)`)
 
 type CurrentUserKey struct{}
 
-func authMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := getAuthToken(r.Header.Get("Authorization"))
+func authMiddleware(c *Container) (mw func(http.Handler) http.Handler) {
+	mw = func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			currentUser := getCurrentUser(r)
+			if currentUser != nil {
+				next.ServeHTTP(w, r)
+				return
+			}
 
-		userInfo, err := googleAPI.FetchUserInfo(token)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
+			token := getAuthToken(r.Header.Get("Authorization"))
 
-		ctx := context.WithValue(r.Context(), CurrentUserKey{}, findOrCreateUser(userInfo))
-		r = r.WithContext(ctx)
+			userInfo, err := googleAPI.FetchUserInfo(token)
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			user := c.UserRepository.FindOrCreateByGoogleInfo(userInfo)
+			ctx := context.WithValue(r.Context(), CurrentUserKey{}, user)
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
+		})
+	}
+	return
 }
 
 func getAuthToken(authorizationHeader string) string {
@@ -39,14 +49,4 @@ func getAuthToken(authorizationHeader string) string {
 	token := matches[len(matches)-1]
 
 	return string(token)
-}
-
-func findOrCreateUser(userInfo *googleAPI.UserInfo) *User {
-	currentUser := &User{}
-
-	db.Where(User{GoogleID: userInfo.Id}).
-		Assign(User{Email: userInfo.Email, PictureURL: userInfo.Picture}).
-		FirstOrCreate(&currentUser)
-
-	return currentUser
 }

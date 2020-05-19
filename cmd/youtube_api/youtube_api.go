@@ -9,17 +9,19 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+const GOOGLE_API_KEY = "GOOGLE_API_KEY"
+
 type Service struct {
 	client *youtube.Service
 }
 
-func New() *Service {
-	youtubeService, err := youtube.NewService(context.Background(), option.WithAPIKey(os.Getenv("GOOGLE_API_KEY")))
+func New() (*Service, error) {
+	youtubeService, err := youtube.NewService(context.Background(), option.WithAPIKey(os.Getenv(GOOGLE_API_KEY)))
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 
-	return &Service{client: youtubeService}
+	return &Service{client: youtubeService}, nil
 }
 
 func (s *Service) FetchVideoDescription(videoId string) string {
@@ -43,7 +45,9 @@ func (s *Service) FetchVideoDescription(videoId string) string {
 	return items[0].Snippet.Description
 }
 
-func (s *Service) FetchVideoComments(videoId string) ([]*youtube.CommentThread, error) {
+func (s *Service) FetchVideoComments(videoId string) []string {
+	textComments := make([]string, 0)
+
 	call := s.client.
 		CommentThreads.
 		List("snippet").
@@ -55,8 +59,12 @@ func (s *Service) FetchVideoComments(videoId string) ([]*youtube.CommentThread, 
 	if err != nil {
 		log.Println(err)
 
-		return nil, err
+		return textComments
 	}
 
-	return response.Items, nil
+	for _, item := range response.Items {
+		textComments = append(textComments, item.Snippet.TopLevelComment.Snippet.TextOriginal)
+	}
+
+	return textComments
 }

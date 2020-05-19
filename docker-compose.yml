@@ -1,6 +1,21 @@
 version: "3.5"
 
 services:
+  app_test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    depends_on:
+      - db
+    environment:
+      - CGO_ENABLED=0
+    env_file:
+      - .env.test
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/usr/src/app
   app_dev:
     build:
       context: .
@@ -32,7 +47,8 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=timecodes_db
+    env_file:
+      - .env
     ports:
       - 9000:5432
   nginx:

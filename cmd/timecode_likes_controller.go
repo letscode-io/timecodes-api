@@ -8,49 +8,50 @@ import (
 )
 
 // POST /timecode_likes
-func handleCreateTimecodeLike(w http.ResponseWriter, r *http.Request) {
+func handleCreateTimecodeLike(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
-	like := &TimecodeLike{UserID: currentUser.ID}
+	like := &TimecodeLike{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(reqBody, like)
 	if err != nil {
 		log.Println(err)
+
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	err = db.Create(like).Error
+	_, err = c.TimecodeLikeRepository.Create(like, currentUser.ID)
 
 	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(err)
 	} else {
+		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(like)
 	}
 }
 
 // DELETE /timecode_likes
-func handleDeleteTimecodeLike(w http.ResponseWriter, r *http.Request) {
+func handleDeleteTimecodeLike(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
-	likeParams := &TimecodeLike{}
-	like := &TimecodeLike{}
+	timecodeLike := &TimecodeLike{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(reqBody, likeParams)
+	err := json.Unmarshal(reqBody, timecodeLike)
 	if err != nil {
 		log.Println(err)
+
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	err = db.Where(&TimecodeLike{UserID: currentUser.ID, TimecodeID: likeParams.TimecodeID}).First(like).Error
+	_, err = c.TimecodeLikeRepository.Delete(timecodeLike, currentUser.ID)
 	if err != nil {
-		json.NewEncoder(w).Encode(err)
-		return
-	}
-
-	err = db.Unscoped().Delete(like).Error
-	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(err)
 	} else {
-		json.NewEncoder(w).Encode(like)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(timecodeLike)
 	}
 }
