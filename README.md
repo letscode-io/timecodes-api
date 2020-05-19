@@ -1,5 +1,7 @@
 # Backend for Timecodes Chrome extension
 
+[![Coverage Status](https://coveralls.io/repos/github/letscode-io/timecodes-api/badge.svg)](https://coveralls.io/github/letscode-io/timecodes-api)
+
 # Development
 
 ```bash
