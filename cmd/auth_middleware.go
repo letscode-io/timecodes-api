@@ -15,6 +15,12 @@ type CurrentUserKey struct{}
 func authMiddleware(c *Container) (mw func(http.Handler) http.Handler) {
 	mw = func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			currentUser := getCurrentUser(r)
+			if currentUser != nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			token := getAuthToken(r.Header.Get("Authorization"))
 
 			userInfo, err := googleAPI.FetchUserInfo(token)

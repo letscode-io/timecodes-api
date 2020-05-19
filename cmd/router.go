@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -19,9 +18,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.H(h.Container, w, r)
 }
 
-func startHttpServer(container *Container) {
-	log.Println("Starting development server at http://127.0.0.1:8080/")
-
+func createRouter(container *Container) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(commonMiddleware)
 
@@ -41,14 +38,13 @@ func startHttpServer(container *Container) {
 	auth.Handle("/timecode_likes", Handler{container, handleCreateTimecodeLike}).Methods(http.MethodPost)
 	auth.Handle("/timecode_likes", Handler{container, handleDeleteTimecodeLike}).Methods(http.MethodDelete)
 
-	handler := cors.Default().Handler(router)
-
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	return cors.Default().Handler(router)
 }
 
 func commonMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
+
 		next.ServeHTTP(w, r)
 	})
 }

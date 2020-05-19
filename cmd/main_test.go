@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -20,4 +23,17 @@ func TestMain(m *testing.M) {
 	defer TestDB.Close()
 
 	os.Exit(m.Run())
+}
+
+func executeRequest(t *testing.T, router http.Handler, req *http.Request, user *User) *httptest.ResponseRecorder {
+	t.Helper()
+
+	req.Header.Set("Content-Type", "application/json")
+	ctx := context.WithValue(context.Background(), CurrentUserKey{}, user)
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	return rr
 }

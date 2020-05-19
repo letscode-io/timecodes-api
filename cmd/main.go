@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	youtubeAPI "timecodes/cmd/youtube_api"
 )
@@ -10,7 +11,7 @@ func main() {
 	db := initDB()
 	runMigrations(db)
 
-	youtubeAPI, err := youtubeAPI.New()
+	ytService, err := youtubeAPI.New()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -19,8 +20,11 @@ func main() {
 		UserRepository:         &DBUserRepository{DB: db},
 		TimecodeRepository:     &DBTimecodeRepository{DB: db},
 		TimecodeLikeRepository: &DBTimecodeLikeRepository{DB: db},
-		YoutubeAPI:             youtubeAPI,
+		YoutubeAPI:             ytService,
 	}
 
-	startHttpServer(container)
+	router := createRouter(container)
+
+	log.Println("Starting development server at http://127.0.0.1:8080/")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -19,7 +20,7 @@ type TimecodeJSON struct {
 	VideoID     string `json:"videoId"`
 }
 
-// GET /timecodes
+// GET /timecodes/{videoId}
 func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	videoID := mux.Vars(r)["videoId"]
@@ -46,9 +47,12 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(reqBody, timecode)
 	if err != nil {
-		json.NewEncoder(w).Encode(err)
+		log.Println(err)
+
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+
 	_, err = c.TimecodeRepository.Create(timecode)
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
