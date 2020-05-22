@@ -90,11 +90,11 @@ func Test_handleCreateTimecode(t *testing.T) {
 	currentUser.ID = 1
 
 	t.Run("when request params are valid", func(t *testing.T) {
-		timecode := &Timecode{VideoID: "video-id", Seconds: 111, Description: "ABC"}
+		timecode := &Timecode{VideoID: "video-id", Seconds: 71, Description: "ABC"}
 
 		mockTimecodeRepo.On("Create", timecode).Return(timecode, nil)
 
-		params := []byte(`{ "videoId": "video-id", "seconds": 111, "description": "ABC" }`)
+		params := []byte(`{ "videoId": "video-id", "seconds": "1:11", "description": "ABC" }`)
 		req, _ := http.NewRequest(http.MethodPost, "/auth/timecodes", bytes.NewBuffer(params))
 
 		response := executeRequest(t, timecodesRouter, req, currentUser)
