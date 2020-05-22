@@ -53,7 +53,7 @@ func parseTimeCodes(candidates []string) (collection []ParsedTimeCode) {
 
 	for _, item := range candidates {
 		rawSeconds := timeCodeRegEx.FindString(item)
-		seconds := parseSeconds(rawSeconds)
+		seconds := ParseSeconds(rawSeconds)
 		texts := strings.Split(item, rawSeconds)
 		description := fetchDescription(texts)
 
@@ -83,7 +83,7 @@ func fetchDescription(texts []string) string {
 	return description
 }
 
-func parseSeconds(time string) (seconds int) {
+func ParseSeconds(time string) (seconds int) {
 	elements := strings.Split(time, ":")
 	lastIndex := len(elements) - 1
 

@@ -61,15 +61,15 @@ func Test_fetchDescription(t *testing.T) {
 	})
 }
 
-func Test_parseSeconds(t *testing.T) {
+func Test_ParseSeconds(t *testing.T) {
 	t.Run("when correct time string given", func(t *testing.T) {
-		seconds := parseSeconds("02:22:33")
+		seconds := ParseSeconds("02:22:33")
 
 		assert.Equal(t, 8553, seconds)
 	})
 
 	t.Run("when incorrect time string given", func(t *testing.T) {
-		seconds := parseSeconds("Seven seconds")
+		seconds := ParseSeconds("Seven seconds")
 
 		assert.Equal(t, 0, seconds)
 	})
