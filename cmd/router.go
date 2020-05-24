@@ -38,7 +38,7 @@ func createRouter(container *Container) http.Handler {
 	auth.Handle("/timecode_likes", Handler{container, handleCreateTimecodeLike}).Methods(http.MethodPost)
 	auth.Handle("/timecode_likes", Handler{container, handleDeleteTimecodeLike}).Methods(http.MethodDelete)
 
-	return cors.Default().Handler(router)
+	return cors.AllowAll().Handler(router)
 }
 
 func commonMiddleware(next http.Handler) http.Handler {

@@ -11,6 +11,12 @@ import (
 	timecodeParser "timecodes/cmd/timecode_parser"
 )
 
+type TimecodeRequest struct {
+	Description string `json:"description"`
+	RawSeconds  string `json:"seconds"`
+	VideoID     string `json:"videoId"`
+}
+
 type TimecodeJSON struct {
 	ID          uint   `json:"id"`
 	Description string `json:"description"`
@@ -42,15 +48,21 @@ func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
 // POST /timecodes
 func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
-	timecode := &Timecode{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(reqBody, timecode)
+	timecodeRequest := &TimecodeRequest{}
+	err := json.Unmarshal(reqBody, timecodeRequest)
 	if err != nil {
 		log.Println(err)
 
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
+	}
+
+	timecode := &Timecode{
+		Description: timecodeRequest.Description,
+		Seconds:     timecodeParser.ParseSeconds(timecodeRequest.RawSeconds),
+		VideoID:     timecodeRequest.VideoID,
 	}
 
 	_, err = c.TimecodeRepository.Create(timecode)
