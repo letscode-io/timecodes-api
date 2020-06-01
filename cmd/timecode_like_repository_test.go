@@ -6,37 +6,46 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/khaiql/dbcleaner.v2"
 )
+
+var tablesForCleaning = []string{
+	"timecode_likes",
+	"timecodes",
+	"users",
+}
 
 type TimecodeLikeRepositorySuite struct {
 	suite.Suite
-	DB   *gorm.DB
-	Repo *DBTimecodeLikeRepository
+	Cleaner dbcleaner.DbCleaner
+	DB      *gorm.DB
+	Repo    *DBTimecodeLikeRepository
 }
 
 func (suite *TimecodeLikeRepositorySuite) SetupSuite() {
-	suite.DB = TestDB
-	suite.Repo = &DBTimecodeLikeRepository{DB: TestDB}
+	cleaner := createDBCleaner(suite.T())
+	db := initDB()
+	runMigrations(db)
+
+	suite.Cleaner = cleaner
+	suite.DB = db
+	suite.Repo = &DBTimecodeLikeRepository{DB: db}
 }
 
 func (suite *TimecodeLikeRepositorySuite) SetupTest() {
-	for _, table := range []string{
-		"timecode_likes",
-		"timecodes",
-		"users",
-	} {
-		Cleaner.Acquire(table)
+	for _, table := range tablesForCleaning {
+		suite.Cleaner.Acquire(table)
 	}
 }
 
 func (suite *TimecodeLikeRepositorySuite) TearDownTest() {
-	for _, table := range []string{
-		"timecode_likes",
-		"timecodes",
-		"users",
-	} {
-		Cleaner.Clean(table)
+	for _, table := range tablesForCleaning {
+		suite.Cleaner.Clean(table)
 	}
+}
+
+func (suite *TimecodeLikeRepositorySuite) TearDownSuite() {
+	suite.DB.Close()
 }
 
 func TestTimecodeLikeRepositorySuite(t *testing.T) {

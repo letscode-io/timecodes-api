@@ -7,28 +7,41 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/khaiql/dbcleaner.v2"
 )
-
-const videoID = "armenian-dram"
-const anotherVideoID = "strategist"
 
 type TimecodeRepositorySuite struct {
 	suite.Suite
-	DB   *gorm.DB
-	Repo *DBTimecodeRepository
+
+	VideoID        string
+	AnotherVideoID string
+	Cleaner        dbcleaner.DbCleaner
+	DB             *gorm.DB
+	Repo           *DBTimecodeRepository
 }
 
 func (suite *TimecodeRepositorySuite) SetupSuite() {
-	suite.DB = TestDB
-	suite.Repo = &DBTimecodeRepository{DB: TestDB}
+	cleaner := createDBCleaner(suite.T())
+	db := initDB()
+	runMigrations(db)
+
+	suite.VideoID = "armenian-dram"
+	suite.AnotherVideoID = "strategist"
+	suite.Cleaner = cleaner
+	suite.DB = db
+	suite.Repo = &DBTimecodeRepository{DB: db}
 }
 
 func (suite *TimecodeRepositorySuite) SetupTest() {
-	Cleaner.Acquire("timecodes")
+	suite.Cleaner.Acquire("timecodes")
 }
 
 func (suite *TimecodeRepositorySuite) TearDownTest() {
-	Cleaner.Clean("timecodes")
+	suite.Cleaner.Clean("timecodes")
+}
+
+func (suite *TimecodeRepositorySuite) TearDownSuite() {
+	suite.DB.Close()
 }
 
 func TestTimecodeRepositorySuite(t *testing.T) {
@@ -39,12 +52,12 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoId() {
 	t := suite.T()
 
 	t.Run("when matching records exist", func(t *testing.T) {
-		suite.DB.Create(&Timecode{VideoID: videoID, Seconds: 55, Description: "ABC"})
-		suite.DB.Create(&Timecode{VideoID: videoID, Seconds: 23, Description: "DEFG"})
-		suite.DB.Create(&Timecode{VideoID: anotherVideoID, Seconds: 77, Description: "FGHJ"})
-		defer Cleaner.Clean("timecodes")
+		suite.DB.Create(&Timecode{VideoID: suite.VideoID, Seconds: 55, Description: "ABC"})
+		suite.DB.Create(&Timecode{VideoID: suite.VideoID, Seconds: 23, Description: "DEFG"})
+		suite.DB.Create(&Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
+		defer suite.Cleaner.Clean("timecodes")
 
-		timecodes := *suite.Repo.FindByVideoId(videoID)
+		timecodes := *suite.Repo.FindByVideoId(suite.VideoID)
 
 		assert.Equal(t, 2, len(timecodes))
 		assert.Equal(t, 23, timecodes[0].Seconds)
@@ -52,9 +65,9 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoId() {
 	})
 
 	t.Run("when there are no matching records", func(t *testing.T) {
-		suite.DB.Create(&Timecode{VideoID: anotherVideoID, Seconds: 77, Description: "FGHJ"})
+		suite.DB.Create(&Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
 
-		timecodes := *suite.Repo.FindByVideoId(videoID)
+		timecodes := *suite.Repo.FindByVideoId(suite.VideoID)
 
 		assert.Equal(t, 0, len(timecodes))
 	})
@@ -64,20 +77,20 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_Create() {
 	t := suite.T()
 
 	t.Run("when record has been created", func(t *testing.T) {
-		timecode, err := suite.Repo.Create(&Timecode{VideoID: videoID, Seconds: 55, Description: "ABC"})
+		timecode, err := suite.Repo.Create(&Timecode{VideoID: suite.VideoID, Seconds: 55, Description: "ABC"})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, timecode.ID)
-		assert.Equal(t, videoID, timecode.VideoID)
+		assert.Equal(t, suite.VideoID, timecode.VideoID)
 	})
 
 	t.Run("when db returns an error", func(t *testing.T) {
 		seconds := 10
 		description := "ABC"
 
-		suite.DB.Create(&Timecode{VideoID: videoID, Seconds: seconds, Description: description})
+		suite.DB.Create(&Timecode{VideoID: suite.VideoID, Seconds: seconds, Description: description})
 
-		timecode, err := suite.Repo.Create(&Timecode{VideoID: videoID, Seconds: seconds, Description: description})
+		timecode, err := suite.Repo.Create(&Timecode{VideoID: suite.VideoID, Seconds: seconds, Description: description})
 
 		assert.True(t, suite.DB.NewRecord(timecode))
 		assert.EqualError(t, err, `pq: duplicate key value violates unique constraint "idx_timecodes_seconds_text_video_id"`)
@@ -94,7 +107,7 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_CreateFromParsedC
 			{Seconds: 56, Description: ""},
 		}
 
-		timecodes := *suite.Repo.CreateFromParsedCodes(parsedTimecodes, videoID)
+		timecodes := *suite.Repo.CreateFromParsedCodes(parsedTimecodes, suite.VideoID)
 
 		assert.Equal(t, 2, len(timecodes))
 		assert.Equal(t, 24, timecodes[0].Seconds)
