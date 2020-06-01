@@ -11,7 +11,14 @@ import (
 
 const GOOGLE_API_KEY = "GOOGLE_API_KEY"
 
+type IService interface {
+	FetchVideoDescription(string) string
+	FetchVideoComments(string) []string
+}
+
 type Service struct {
+	IService
+
 	client *youtube.Service
 }
 
