@@ -1,4 +1,4 @@
-FROM golang:alpine AS builder
+FROM docker.pkg.github.com/letscode-io/timecodes-api/timecodes-api_base:latest AS base
 
 ENV APP_HOME=/usr/src/app
 
@@ -31,6 +31,6 @@ RUN apk update --purge \
 
 WORKDIR $APP_HOME
 
-COPY --from=builder $APP_HOME/application $APP_HOME/
+COPY --from=base $APP_HOME/application $APP_HOME/
 
 ENTRYPOINT ["./application"]

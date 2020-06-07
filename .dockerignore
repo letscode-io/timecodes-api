@@ -7,7 +7,7 @@
 .gitignore
 
 Dockerfile
-Dockerfile.dev
+Dockerfile.*
 docker-compose.yml
 
 log/*
@@ -17,3 +17,8 @@ tmp/*
 !tmp/.keep
 
 .air.conf
+
+.github
+.vscode
+
+README.md
