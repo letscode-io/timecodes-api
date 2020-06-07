@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 	"testing"
+	"time"
 	timecodeParser "timecodes/cmd/timecode_parser"
 
 	"github.com/stretchr/testify/assert"
@@ -11,7 +13,9 @@ import (
 )
 
 var mockTimecodeRepo = &MockTimecodeRepository{}
+var mockYTAPI = &mockYT{}
 var timecodesContainer = &Container{
+	YoutubeAPI:         mockYTAPI,
 	TimecodeRepository: mockTimecodeRepo,
 }
 var timecodesRouter = createRouter(timecodesContainer)
@@ -28,7 +32,7 @@ func (m *MockTimecodeRepository) FindByVideoId(videoID string) *[]*Timecode {
 		return collection
 	}
 
-	collection = &[]*Timecode{{}, {}, {}}
+	collection = &[]*Timecode{{}, {}, {Likes: []TimecodeLike{{UserID: 1}}}}
 
 	return collection
 }
@@ -47,10 +51,30 @@ func (m *MockTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) {
 	return timecode, nil
 }
 
-func (m *MockTimecodeRepository) CreateFromParsedCodes(parsedCodes []timecodeParser.ParsedTimeCode, videoID string) *[]*Timecode {
-	args := m.Called(parsedCodes, videoID)
+func (m *MockTimecodeRepository) CreateFromParsedCodes(parsedCodes []timecodeParser.ParsedTimeCode, videoId string) *[]*Timecode {
+	args := m.Called(parsedCodes, videoId)
 
 	return args.Get(0).(*[]*Timecode)
+}
+
+type mockYT struct {
+	mock.Mock
+}
+
+func (m *mockYT) FetchVideoDescription(videoId string) string {
+	args := m.Called(videoId)
+
+	_ = args.Get(0).(string)
+
+	return "description"
+}
+
+func (m *mockYT) FetchVideoComments(videoId string) []string {
+	args := m.Called(videoId)
+
+	_ = args.Get(0).([]string)
+
+	return []string{"comment one", "comment two"}
 }
 
 func Test_handleGetTimecodes(t *testing.T) {
@@ -71,15 +95,23 @@ func Test_handleGetTimecodes(t *testing.T) {
 	})
 
 	t.Run("when timecodes don't exist", func(t *testing.T) {
-		t.Skip()
 		timecodes := &[]*Timecode{}
+		var emptyParsedCodes []timecodeParser.ParsedTimeCode
 
 		mockTimecodeRepo.On("FindByVideoId", "no-items").Return(timecodes, nil)
+		mockYTAPI.On("FetchVideoDescription", "no-items").Return("")
+		mockYTAPI.On("FetchVideoComments", "no-items").Return([]string{})
+		mockTimecodeRepo.
+			On("CreateFromParsedCodes", emptyParsedCodes, "no-items").
+			Return(timecodes, nil)
 
-		req, _ := http.NewRequest(http.MethodGet, "/timecodes/video-id", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/timecodes/no-items", nil)
 
 		response := executeRequest(t, timecodesRouter, req, currentUser)
 
+		time.Sleep(1 * time.Millisecond)
+
+		mockYTAPI.AssertExpectations(t)
 		mockTimecodeRepo.AssertExpectations(t)
 		assert.Equal(t, http.StatusOK, response.Code)
 	})
@@ -100,6 +132,29 @@ func Test_handleCreateTimecode(t *testing.T) {
 		response := executeRequest(t, timecodesRouter, req, currentUser)
 
 		mockTimecodeRepo.AssertExpectations(t)
-		assert.Equal(t, http.StatusOK, response.Code)
+		assert.Equal(t, http.StatusCreated, response.Code)
+	})
+
+	t.Run("when request params are invalid", func(t *testing.T) {
+		timecode := &Timecode{VideoID: "video-id", Seconds: 71, Description: ""}
+
+		mockTimecodeRepo.On("Create", timecode).Return(nil, errors.New(""))
+
+		params := []byte(`{ "videoId": "video-id", "seconds": "1:11", "description": "" }`)
+		req, _ := http.NewRequest(http.MethodPost, "/auth/timecodes", bytes.NewBuffer(params))
+
+		response := executeRequest(t, timecodesRouter, req, currentUser)
+
+		mockTimecodeRepo.AssertExpectations(t)
+		assert.Equal(t, http.StatusUnprocessableEntity, response.Code)
+	})
+
+	t.Run("when request params contain invalid JSON", func(t *testing.T) {
+		params := []byte(`{ "Invalid json }`)
+		req, _ := http.NewRequest(http.MethodPost, "/auth/timecodes", bytes.NewBuffer(params))
+
+		response := executeRequest(t, timecodesRouter, req, currentUser)
+
+		assert.Equal(t, http.StatusBadRequest, response.Code)
 	})
 }

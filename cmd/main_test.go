@@ -4,25 +4,21 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/khaiql/dbcleaner/engine"
 	"gopkg.in/khaiql/dbcleaner.v2"
 )
 
-var Cleaner = dbcleaner.New()
-var TestDB = initDB()
+func createDBCleaner(t *testing.T) dbcleaner.DbCleaner {
+	t.Helper()
 
-func TestMain(m *testing.M) {
+	cleaner := dbcleaner.New()
 	dsn := getEnvDSN()
 	pg := engine.NewPostgresEngine(dsn.String())
-	Cleaner.SetEngine(pg)
+	cleaner.SetEngine(pg)
 
-	runMigrations(TestDB)
-	defer TestDB.Close()
-
-	os.Exit(m.Run())
+	return cleaner
 }
 
 func executeRequest(t *testing.T, router http.Handler, req *http.Request, user *User) *httptest.ResponseRecorder {

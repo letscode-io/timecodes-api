@@ -9,5 +9,5 @@ type Container struct {
 	TimecodeRepository     TimecodeRepository
 	UserRepository         UserRepository
 
-	YoutubeAPI *youtubeapi.Service
+	YoutubeAPI youtubeapi.IService
 }

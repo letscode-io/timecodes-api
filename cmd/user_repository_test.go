@@ -6,27 +6,35 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/khaiql/dbcleaner.v2"
 
 	googleAPI "timecodes/cmd/google_api"
 )
 
 type UserRepositorySuite struct {
 	suite.Suite
-	DB   *gorm.DB
-	Repo *DBUserRepository
+
+	Cleaner dbcleaner.DbCleaner
+	DB      *gorm.DB
+	Repo    *DBUserRepository
 }
 
 func (suite *UserRepositorySuite) SetupSuite() {
-	suite.DB = TestDB
-	suite.Repo = &DBUserRepository{DB: TestDB}
+	cleaner := createDBCleaner(suite.T())
+	db := initDB()
+	runMigrations(db)
+
+	suite.Cleaner = cleaner
+	suite.DB = db
+	suite.Repo = &DBUserRepository{DB: db}
 }
 
 func (suite *UserRepositorySuite) SetupTest() {
-	Cleaner.Acquire("users")
+	suite.Cleaner.Acquire("users")
 }
 
 func (suite *UserRepositorySuite) TearDownTest() {
-	Cleaner.Clean("users")
+	suite.Cleaner.Clean("users")
 }
 
 func TestUserRepositorySuite(t *testing.T) {

@@ -21,7 +21,7 @@ type TimecodeJSON struct {
 	ID          uint   `json:"id"`
 	Description string `json:"description"`
 	LikesCount  int    `json:"likesCount"`
-	LikedByMe   bool   `json:"likedByMe"`
+	LikedByMe   bool   `json:"likedByMe,omitempty"`
 	Seconds     int    `json:"seconds"`
 	VideoID     string `json:"videoId"`
 }
@@ -67,8 +67,10 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 
 	_, err = c.TimecodeRepository.Create(timecode)
 	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(err)
 	} else {
+		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(serializeTimecode(timecode, currentUser))
 	}
 }
