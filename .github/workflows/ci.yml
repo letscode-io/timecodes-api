@@ -15,7 +15,7 @@ jobs:
       - name: Run GolangCI-Lint Action
         uses: actions-contrib/golangci-lint@v1
         with:
-          args: run --exclude-use-default
+          args: run ./... --exclude-use-default
   test:
     runs-on: ubuntu-latest
     steps:
