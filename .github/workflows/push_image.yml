@@ -1,0 +1,19 @@
+name: Build and push base image
+on:
+  push:
+    branches:
+      - master
+jobs:
+  push_image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@master
+      - name: Build base docker image
+        run: |
+          cp .env.example .env
+          docker login docker.pkg.github.com -u vaihtovirta -p ${{ secrets.GITHUB_TOKEN }}
+          docker-compose build --pull app_base
+      - name: Push docker image to Github registry
+        run: |
+          docker push docker.pkg.github.com/letscode-io/timecodes-api/timecodes-api_base:latest

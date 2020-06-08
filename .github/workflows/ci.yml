@@ -1,4 +1,4 @@
-name: Essential checks
+name: CI
 on:
   push:
     branches:
@@ -15,24 +15,31 @@ jobs:
       - name: Run GolangCI-Lint Action
         uses: actions-contrib/golangci-lint@v1
         with:
-          args: run --exclude-use-default
+          args: run ./... --exclude-use-default
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current branch
         uses: actions/checkout@master
-      - name: docker-compose version
-        run: docker-compose --version
-      - name: Build docker image
+      - uses: whoan/docker-build-with-cache-action@v5
+        with:
+          username: vaihtovirta
+          password: "${{ secrets.GITHUB_TOKEN }}"
+          registry: docker.pkg.github.com
+          image_name: timecodes-api_base
+          push_image_and_stages: false
+          pull_image_and_stages: false
+      - name: Build docker image for tests
         run: |
           cp .env.example .env
-          docker-compose build app_test
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u vaihtovirta --password-stdin
+          docker-compose build --pull app_test
       - name: Run tests
-        run: docker-compose run app_test go test ./... -covermode=count -coverprofile=coverage.out
+        run: docker-compose run --rm app_test go test ./... -covermode=count -coverprofile=tmp/coverage.out
       - name: Convert coverage to lcov
         uses: jandelgado/gcov2lcov-action@v1.0.2
         with:
-            infile: coverage.out
+            infile: tmp/coverage.out
             outfile: coverage.lcov
       - name: Coveralls
         uses: coverallsapp/github-action@master

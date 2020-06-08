@@ -2,12 +2,12 @@
 
 .dockerignore
 .env
-.env.example
+.env.*
 .git
 .gitignore
 
 Dockerfile
-Dockerfile.dev
+Dockerfile.*
 docker-compose.yml
 
 log/*
@@ -17,3 +17,8 @@ tmp/*
 !tmp/.keep
 
 .air.conf
+
+.github
+.vscode
+
+README.md
