@@ -22,8 +22,3 @@ tmp/*
 .vscode
 
 README.md
-
-.golangci.yml
-
-support/golangcilint/errcheck_safelist.txt
-support/build_and_push_base_image.rb
