@@ -25,10 +25,6 @@ FROM alpine AS final
 
 ENV APP_HOME=/usr/src/app
 
-RUN apk update --purge \
-    && apk upgrade --purge \
-    && rm -rf /var/cache/apk/*
-
 WORKDIR $APP_HOME
 
 COPY --from=base $APP_HOME/application $APP_HOME/

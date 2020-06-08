@@ -16,5 +16,3 @@ COPY go.mod go.sum $APP_HOME/
 RUN go mod download
 
 COPY . $APP_HOME
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o $APP_HOME/application $APP_HOME/cmd

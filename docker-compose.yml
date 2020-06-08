@@ -2,6 +2,7 @@ version: "3.5"
 
 services:
   app_base:
+    image: docker.pkg.github.com/letscode-io/timecodes-api/timecodes-api_base:latest
     build:
       context: .
       dockerfile: Dockerfile.base
