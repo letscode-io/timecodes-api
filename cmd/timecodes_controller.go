@@ -24,6 +24,7 @@ type TimecodeJSON struct {
 	LikedByMe   bool   `json:"likedByMe,omitempty"`
 	Seconds     int    `json:"seconds"`
 	VideoID     string `json:"videoId"`
+	UserID      uint   `json:"userId,omitempty"`
 }
 
 // GET /timecodes/{videoId}
@@ -63,6 +64,7 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 		Description: timecodeRequest.Description,
 		Seconds:     timecodeParser.ParseSeconds(timecodeRequest.RawSeconds),
 		VideoID:     timecodeRequest.VideoID,
+		UserID:      currentUser.ID,
 	}
 
 	_, err = c.TimecodeRepository.Create(timecode)
@@ -77,8 +79,11 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 
 func serializeTimecode(timecode *Timecode, currentUser *User) (timecodeJSON *TimecodeJSON) {
 	var likedByMe bool
+	var userId uint
+
 	if currentUser != nil {
 		likedByMe = getLikedByMe(timecode.Likes, currentUser.ID)
+		userId = timecode.UserID
 	}
 
 	return &TimecodeJSON{
@@ -88,6 +93,7 @@ func serializeTimecode(timecode *Timecode, currentUser *User) (timecodeJSON *Tim
 		LikedByMe:   likedByMe,
 		Seconds:     timecode.Seconds,
 		VideoID:     timecode.VideoID,
+		UserID:      userId,
 	}
 }
 

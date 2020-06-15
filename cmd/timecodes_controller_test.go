@@ -27,28 +27,13 @@ type MockTimecodeRepository struct {
 func (m *MockTimecodeRepository) FindByVideoId(videoID string) *[]*Timecode {
 	args := m.Called(videoID)
 
-	collection := args.Get(0).(*[]*Timecode)
-	if videoID == "no-items" {
-		return collection
-	}
-
-	collection = &[]*Timecode{{}, {}, {Likes: []TimecodeLike{{UserID: 1}}}}
-
-	return collection
+	return args.Get(0).(*[]*Timecode)
 }
 
 func (m *MockTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) {
 	args := m.Called(timecode)
 
-	err := args.Error(1)
-
-	if len(timecode.Description) == 0 {
-		return nil, err
-	}
-
-	_ = args.Get(0).(*Timecode)
-
-	return timecode, nil
+	return args.Get(0).(*Timecode), args.Error(1)
 }
 
 func (m *MockTimecodeRepository) CreateFromParsedCodes(parsedCodes []timecodeParser.ParsedTimeCode, videoId string) *[]*Timecode {
@@ -64,17 +49,13 @@ type mockYT struct {
 func (m *mockYT) FetchVideoDescription(videoId string) string {
 	args := m.Called(videoId)
 
-	_ = args.Get(0).(string)
-
-	return "description"
+	return args.Get(0).(string)
 }
 
 func (m *mockYT) FetchVideoComments(videoId string) []string {
 	args := m.Called(videoId)
 
-	_ = args.Get(0).([]string)
-
-	return []string{"comment one", "comment two"}
+	return args.Get(0).([]string)
 }
 
 func Test_handleGetTimecodes(t *testing.T) {
@@ -122,7 +103,12 @@ func Test_handleCreateTimecode(t *testing.T) {
 	currentUser.ID = 1
 
 	t.Run("when request params are valid", func(t *testing.T) {
-		timecode := &Timecode{VideoID: "video-id", Seconds: 71, Description: "ABC"}
+		timecode := &Timecode{
+			VideoID:     "video-id",
+			Seconds:     71,
+			Description: "ABC",
+			UserID:      currentUser.ID,
+		}
 
 		mockTimecodeRepo.On("Create", timecode).Return(timecode, nil)
 
@@ -136,9 +122,9 @@ func Test_handleCreateTimecode(t *testing.T) {
 	})
 
 	t.Run("when request params are invalid", func(t *testing.T) {
-		timecode := &Timecode{VideoID: "video-id", Seconds: 71, Description: ""}
+		timecode := &Timecode{VideoID: "video-id", Seconds: 71, Description: "", UserID: currentUser.ID}
 
-		mockTimecodeRepo.On("Create", timecode).Return(nil, errors.New(""))
+		mockTimecodeRepo.On("Create", timecode).Return(&Timecode{}, errors.New(""))
 
 		params := []byte(`{ "videoId": "video-id", "seconds": "1:11", "description": "" }`)
 		req, _ := http.NewRequest(http.MethodPost, "/auth/timecodes", bytes.NewBuffer(params))

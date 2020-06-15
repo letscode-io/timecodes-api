@@ -14,6 +14,7 @@ type Timecode struct {
 	Seconds     int            `json:"seconds" gorm:"not null"`
 	VideoID     string         `json:"videoId" gorm:"not null;index"`
 	Likes       []TimecodeLike `json:"likes" gorm:"foreignkey:TimecodeID"`
+	UserID      uint           `json:"userId"`
 }
 
 type TimecodeRepository interface {
@@ -57,7 +58,14 @@ func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timeco
 
 		seen[key] = struct{}{}
 
-		timecode := &Timecode{Seconds: code.Seconds, VideoID: videoId, Description: code.Description}
+		user := getAdminUser(repo.DB)
+
+		timecode := &Timecode{
+			Seconds:     code.Seconds,
+			VideoID:     videoId,
+			Description: code.Description,
+			UserID:      user.ID,
+		}
 
 		err := repo.DB.Create(timecode).Error
 		if err != nil {
