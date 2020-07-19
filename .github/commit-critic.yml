@@ -1,0 +1,6 @@
+---
+commitRegExp: ~
+commitRegExpExplanation: ~
+ignoreWords:
+  - traefik
+rules: ~
