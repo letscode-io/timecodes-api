@@ -1,11 +1,14 @@
 version: "3.5"
 
 services:
+  # Base
   app_base:
     image: docker.pkg.github.com/letscode-io/timecodes-api/timecodes-api_base:latest
     build:
       context: .
       dockerfile: Dockerfile.base
+
+  # Test
   app_test:
     build:
       context: .
@@ -17,8 +20,13 @@ services:
       - CGO_ENABLED=0
     env_file:
       - .env.test
+    networks:
+      - default
     volumes:
       - ./tmp:/usr/src/app/tmp
+      - .:/usr/src/app
+
+  # Dev
   app_dev:
     build:
       context: .
@@ -31,6 +39,8 @@ services:
       - "8080:8080"
     volumes:
       - .:/usr/src/app
+
+  # Production
   app:
     restart: always
     build:
@@ -39,36 +49,39 @@ services:
       target: final
     depends_on:
       - db
-      - nginx
-      - certbot
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+
+      - traefik.http.routers.timecodes-http.rule=Host(`${APP_HOST}`)
+      - "traefik.http.services.timecodes-service.loadbalancer.server.port=8080"
+
+      - traefik.http.routers.timecodes-http.entrypoints=http
+      - traefik.http.routers.timecodes-http.service=timecodes-service
+      - traefik.http.routers.timecodes-http.middlewares=https-redirect
+
+      - traefik.http.routers.timecodes-https.rule=Host(`${APP_HOST}`)
+      - traefik.http.routers.timecodes-https.entrypoints=https
+      - traefik.http.routers.timecodes-https.tls=true
+      - traefik.http.routers.timecodes-https.tls.certresolver=le
+    networks:
+      - traefik-public
+      - default
+
+  # Database
   db:
     image: postgres:12-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
     env_file:
       - .env
     ports:
       - 9000:5432
-  nginx:
-    image: nginx:latest
-    restart: on-failure
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./support/nginx:/etc/nginx/conf.d
-      - ./support/certbot/conf:/etc/letsencrypt
-      - ./support/certbot/www:/var/www/certbot
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-  certbot:
-    image: certbot/certbot
-    restart: unless-stopped
-    volumes:
-      - ./support/certbot/conf:/etc/letsencrypt
-      - ./support/certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - default
+
+networks:
+  traefik-public:
+    external: true
