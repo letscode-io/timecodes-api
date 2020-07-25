@@ -30,9 +30,12 @@ jobs:
           push_image_and_stages: false
           pull_image_and_stages: false
       - name: Build docker image for tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp .env.example .env
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u vaihtovirta --password-stdin
+          cp .env.test .env
+          docker login docker.pkg.github.com -u vaihtovirta -p $GITHUB_TOKEN
+          docker network create traefik-public
           docker-compose build --pull app_test
       - name: Run tests
         run: docker-compose run --rm app_test go test ./... -covermode=count -coverprofile=tmp/coverage.out
@@ -46,3 +49,22 @@ jobs:
         with:
             github-token: ${{ secrets.github_token }}
             path-to-lcov: coverage.lcov
+  deployment:
+    if: github.ref == 'refs/heads/master'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect by ssh and rebuild docker image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            cd /home/deploy/applications/timecodes/timecodes-api
+            git fetch --all
+            git reset --hard origin/master
+            dotenvp
+            docker-compose -f docker-compose.prod.yml pull app
+            docker-compose -f docker-compose.prod.yml up -d

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	googleAPI "timecodes/cmd/google_api"
 
 	"github.com/jinzhu/gorm"
@@ -31,4 +32,11 @@ func (repo *DBUserRepository) FindOrCreateByGoogleInfo(userInfo *googleAPI.UserI
 		FirstOrCreate(&user)
 
 	return user
+}
+
+func getAdminUser(db *gorm.DB) *User {
+	adminUser := &User{Email: os.Getenv("ADMIN_EMAIL"), GoogleID: os.Getenv("ADMIN_GOOGLE_ID")}
+	db.FirstOrCreate(adminUser)
+
+	return adminUser
 }

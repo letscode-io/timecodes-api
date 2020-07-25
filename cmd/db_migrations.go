@@ -1,6 +1,8 @@
 package main
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 func runMigrations(db *gorm.DB) {
 	applyTimecodesMigrations(db)
@@ -22,6 +24,8 @@ func applyTimecodesMigrations(db *gorm.DB) {
 
 func applyUsersMigrations(db *gorm.DB) {
 	db.AutoMigrate(&User{})
+
+	getAdminUser(db)
 }
 
 func applyTimecodeLikesMigrations(db *gorm.DB) {
