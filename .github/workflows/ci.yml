@@ -65,6 +65,6 @@ jobs:
             cd /home/deploy/applications/timecodes/timecodes-api
             git fetch --all
             git reset --hard origin/master
-            dotenvp
-            docker-compose -f docker-compose.prod.yml pull app
-            docker-compose -f docker-compose.prod.yml up -d
+            export $(egrep -v '^#' .env.production | xargs)
+            docker-compose pull app
+            docker-compose up -d
