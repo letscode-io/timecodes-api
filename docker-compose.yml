@@ -81,6 +81,8 @@ services:
       - 9000:5432
     networks:
       - default
+    volumes:
+      - ./tmp/postgresql-data:/var/lib/postgresql/data
 
 networks:
   traefik-public:
