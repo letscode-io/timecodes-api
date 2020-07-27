@@ -4,6 +4,7 @@ import (
 	"strconv"
 	timecodeParser "timecodes/cmd/timecode_parser"
 
+	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/gorm"
 )
 
@@ -51,7 +52,7 @@ func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timeco
 
 	var collection []*Timecode
 	for _, code := range parsedTimecodes {
-		key := strconv.Itoa(code.Seconds) + code.Description
+		key := strconv.Itoa(code.Seconds) + strcase.ToCamel(code.Description)
 		if _, ok := seen[key]; ok {
 			continue
 		}
