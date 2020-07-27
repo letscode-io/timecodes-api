@@ -3,4 +3,6 @@ commitRegExp: ~
 commitRegExpExplanation: ~
 ignoreWords:
   - traefik
+  - timecode
+  - timecodes
 rules: ~
