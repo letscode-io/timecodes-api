@@ -98,13 +98,13 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_Create() {
 }
 
 func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_CreateFromParsedCodes() {
-	suite.T().Run("when valid parsed codes has been given", func(t *testing.T) {
+	suite.T().Run("when valid parsed codes have been given", func(t *testing.T) {
 		parsedTimecodes := []timecodeParser.ParsedTimeCode{
-			{Seconds: 24, Description: "ABC"},
-			{Seconds: 24, Description: "ABC"},
-			{Seconds: 56, Description: "DFG"},
-			{Seconds: 56, Description: "DFG"},
-			{Seconds: 56, Description: ""},
+			{Seconds: 24, Description: "Mariya Takeuchi - Oh Yes Oh No"},
+			{Seconds: 24, Description: "Mariya Takeuchi Oh Yes Oh No"},
+			{Seconds: 56, Description: "Toshiki Kadomatsu - Summer Emotions"},
+			{Seconds: 56, Description: "Toshiki Kadomatsu Summer Emotions"},
+			{Seconds: 88, Description: ""},
 		}
 
 		timecodes := *suite.Repo.CreateFromParsedCodes(parsedTimecodes, suite.VideoID)
