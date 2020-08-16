@@ -8,6 +8,7 @@ import (
 	"github.com/rs/cors"
 )
 
+// Handler represents a helper structure for holding
 type Handler struct {
 	*Container
 	H func(c *Container, w http.ResponseWriter, r *http.Request)
@@ -20,7 +21,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func createRouter(container *Container) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
-	router.Use(commonMiddleware)
+	router.Use(respondWIthJSONHeader)
 
 	// public
 	router.HandleFunc("/", handleHome)
@@ -41,7 +42,7 @@ func createRouter(container *Container) http.Handler {
 	return cors.AllowAll().Handler(router)
 }
 
-func commonMiddleware(next http.Handler) http.Handler {
+func respondWIthJSONHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 

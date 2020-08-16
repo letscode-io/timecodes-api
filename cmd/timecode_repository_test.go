@@ -48,7 +48,7 @@ func TestTimecodeRepositorySuite(t *testing.T) {
 	suite.Run(t, new(TimecodeRepositorySuite))
 }
 
-func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoId() {
+func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoID() {
 	t := suite.T()
 
 	t.Run("when matching records exist", func(t *testing.T) {
@@ -57,7 +57,7 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoId() {
 		suite.DB.Create(&Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
 		defer suite.Cleaner.Clean("timecodes")
 
-		timecodes := *suite.Repo.FindByVideoId(suite.VideoID)
+		timecodes := *suite.Repo.FindByVideoID(suite.VideoID)
 
 		assert.Equal(t, 2, len(timecodes))
 		assert.Equal(t, 23, timecodes[0].Seconds)
@@ -67,7 +67,7 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoId() {
 	t.Run("when there are no matching records", func(t *testing.T) {
 		suite.DB.Create(&Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
 
-		timecodes := *suite.Repo.FindByVideoId(suite.VideoID)
+		timecodes := *suite.Repo.FindByVideoID(suite.VideoID)
 
 		assert.Equal(t, 0, len(timecodes))
 	})

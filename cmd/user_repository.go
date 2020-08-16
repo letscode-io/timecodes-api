@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// User represents user model
 type User struct {
 	gorm.Model
 	Email      string
@@ -14,16 +15,19 @@ type User struct {
 	PictureURL string
 }
 
+// UserRepository represents an interface for user repository
 type UserRepository interface {
 	FindOrCreateByGoogleInfo(*googleAPI.UserInfo) *User
 }
 
+// DBUserRepository represents database repository
 type DBUserRepository struct {
 	UserRepository
 
 	DB *gorm.DB
 }
 
+// FindOrCreateByGoogleInfo finds user by given google information or creates a new user if it doesn't exist
 func (repo *DBUserRepository) FindOrCreateByGoogleInfo(userInfo *googleAPI.UserInfo) *User {
 	user := &User{}
 

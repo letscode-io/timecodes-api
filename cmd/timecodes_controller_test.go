@@ -24,7 +24,7 @@ type MockTimecodeRepository struct {
 	mock.Mock
 }
 
-func (m *MockTimecodeRepository) FindByVideoId(videoID string) *[]*Timecode {
+func (m *MockTimecodeRepository) FindByVideoID(videoID string) *[]*Timecode {
 	args := m.Called(videoID)
 
 	return args.Get(0).(*[]*Timecode)
@@ -36,8 +36,8 @@ func (m *MockTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) {
 	return args.Get(0).(*Timecode), args.Error(1)
 }
 
-func (m *MockTimecodeRepository) CreateFromParsedCodes(parsedCodes []timecodeParser.ParsedTimeCode, videoId string) *[]*Timecode {
-	args := m.Called(parsedCodes, videoId)
+func (m *MockTimecodeRepository) CreateFromParsedCodes(parsedCodes []timecodeParser.ParsedTimeCode, videoID string) *[]*Timecode {
+	args := m.Called(parsedCodes, videoID)
 
 	return args.Get(0).(*[]*Timecode)
 }
@@ -46,14 +46,14 @@ type mockYT struct {
 	mock.Mock
 }
 
-func (m *mockYT) FetchVideoDescription(videoId string) string {
-	args := m.Called(videoId)
+func (m *mockYT) FetchVideoDescription(videoID string) string {
+	args := m.Called(videoID)
 
 	return args.Get(0).(string)
 }
 
-func (m *mockYT) FetchVideoComments(videoId string) []string {
-	args := m.Called(videoId)
+func (m *mockYT) FetchVideoComments(videoID string) []string {
+	args := m.Called(videoID)
 
 	return args.Get(0).([]string)
 }
@@ -65,7 +65,7 @@ func Test_handleGetTimecodes(t *testing.T) {
 	t.Run("when timecodes exist", func(t *testing.T) {
 		timecodes := &[]*Timecode{{}, {}, {}}
 
-		mockTimecodeRepo.On("FindByVideoId", "video-id").Return(timecodes, nil)
+		mockTimecodeRepo.On("FindByVideoID", "video-id").Return(timecodes, nil)
 
 		req, _ := http.NewRequest(http.MethodGet, "/timecodes/video-id", nil)
 
@@ -79,7 +79,7 @@ func Test_handleGetTimecodes(t *testing.T) {
 		timecodes := &[]*Timecode{}
 		var emptyParsedCodes []timecodeParser.ParsedTimeCode
 
-		mockTimecodeRepo.On("FindByVideoId", "no-items").Return(timecodes, nil)
+		mockTimecodeRepo.On("FindByVideoID", "no-items").Return(timecodes, nil)
 		mockYTAPI.On("FetchVideoDescription", "no-items").Return("")
 		mockYTAPI.On("FetchVideoComments", "no-items").Return([]string{})
 		mockTimecodeRepo.

@@ -6,17 +6,19 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
 	timecodeParser "timecodes/cmd/timecode_parser"
+
+	"github.com/gorilla/mux"
 )
 
+// TimecodeRequest represents timecode request parameters
 type TimecodeRequest struct {
 	Description string `json:"description"`
 	RawSeconds  string `json:"seconds"`
 	VideoID     string `json:"videoId"`
 }
 
+// TimecodeJSON represents custom timecode response
 type TimecodeJSON struct {
 	ID          uint   `json:"id"`
 	Description string `json:"description"`
@@ -32,7 +34,7 @@ func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
 	currentUser := getCurrentUser(r)
 	videoID := mux.Vars(r)["videoId"]
 
-	timecodes := c.TimecodeRepository.FindByVideoId(videoID)
+	timecodes := c.TimecodeRepository.FindByVideoID(videoID)
 
 	if len(*timecodes) == 0 {
 		go parseVideoContentAndCreateTimecodes(c, videoID)
@@ -79,11 +81,11 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 
 func serializeTimecode(timecode *Timecode, currentUser *User) (timecodeJSON *TimecodeJSON) {
 	var likedByMe bool
-	var userId uint
+	var userID uint
 
 	if currentUser != nil {
 		likedByMe = getLikedByMe(timecode.Likes, currentUser.ID)
-		userId = timecode.UserID
+		userID = timecode.UserID
 	}
 
 	return &TimecodeJSON{
@@ -93,7 +95,7 @@ func serializeTimecode(timecode *Timecode, currentUser *User) (timecodeJSON *Tim
 		LikedByMe:   likedByMe,
 		Seconds:     timecode.Seconds,
 		VideoID:     timecode.VideoID,
-		UserID:      userId,
+		UserID:      userID,
 	}
 }
 

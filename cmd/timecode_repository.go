@@ -18,19 +18,22 @@ type Timecode struct {
 	UserID      uint           `json:"userId"`
 }
 
+// TimecodeRepository represents repository interface
 type TimecodeRepository interface {
-	FindByVideoId(string) *[]*Timecode
+	FindByVideoID(string) *[]*Timecode
 	Create(*Timecode) (*Timecode, error)
 	CreateFromParsedCodes([]timecodeParser.ParsedTimeCode, string) *[]*Timecode
 }
 
+// DBTimecodeRepository implements TimecodeRepository
 type DBTimecodeRepository struct {
 	TimecodeRepository
 
 	DB *gorm.DB
 }
 
-func (repo *DBTimecodeRepository) FindByVideoId(videoID string) *[]*Timecode {
+// FindByVideoID finds timecode by given video id
+func (repo *DBTimecodeRepository) FindByVideoID(videoID string) *[]*Timecode {
 	timecodes := &[]*Timecode{}
 
 	repo.DB.Order("seconds asc").
@@ -41,13 +44,15 @@ func (repo *DBTimecodeRepository) FindByVideoId(videoID string) *[]*Timecode {
 	return timecodes
 }
 
+// Create creates a new timecode record
 func (repo *DBTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) {
 	err := repo.DB.Create(timecode).Error
 
 	return timecode, err
 }
 
-func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoId string) *[]*Timecode {
+// CreateFromParsedCodes creates timecodes from parsed codes
+func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoID string) *[]*Timecode {
 	seen := make(map[string]struct{})
 
 	var collection []*Timecode
@@ -63,7 +68,7 @@ func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timeco
 
 		timecode := &Timecode{
 			Seconds:     code.Seconds,
-			VideoID:     videoId,
+			VideoID:     videoID,
 			Description: code.Description,
 			UserID:      user.ID,
 		}

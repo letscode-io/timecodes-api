@@ -10,6 +10,7 @@ import (
 
 var authTokenRegExp = regexp.MustCompile(`Bearer (\S+$)`)
 
+// CurrentUserKey used to store user struct in http context
 type CurrentUserKey struct{}
 
 func authMiddleware(c *Container) (mw func(http.Handler) http.Handler) {
