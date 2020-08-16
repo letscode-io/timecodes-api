@@ -2,7 +2,8 @@ package main
 
 import (
 	"os"
-	googleAPI "timecodes/cmd/google_api"
+
+	googleAPI "timecodes/pkg/google_api"
 
 	"github.com/jinzhu/gorm"
 )

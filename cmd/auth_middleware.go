@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	googleAPI "timecodes/cmd/google_api"
+	googleAPI "timecodes/pkg/google_api"
 )
 
 var authTokenRegExp = regexp.MustCompile(`Bearer (\S+$)`)

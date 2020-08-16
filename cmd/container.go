@@ -1,7 +1,7 @@
 package main
 
 import (
-	youtubeapi "timecodes/cmd/youtube_api"
+	youtubeapi "timecodes/pkg/youtube_api"
 )
 
 // Container represents DI container

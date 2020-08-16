@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	youtubeAPI "timecodes/cmd/youtube_api"
+	youtubeAPI "timecodes/pkg/youtube_api"
 )
 
 func main() {

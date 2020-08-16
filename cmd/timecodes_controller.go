@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	timecodeParser "timecodes/cmd/timecode_parser"
+	timecodeParser "timecodes/pkg/timecode_parser"
 
 	"github.com/gorilla/mux"
 )

@@ -2,7 +2,8 @@ package main
 
 import (
 	"testing"
-	timecodeParser "timecodes/cmd/timecode_parser"
+
+	timecodeParser "timecodes/pkg/timecode_parser"
 
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"

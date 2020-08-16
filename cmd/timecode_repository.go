@@ -2,7 +2,8 @@ package main
 
 import (
 	"strconv"
-	timecodeParser "timecodes/cmd/timecode_parser"
+
+	timecodeParser "timecodes/pkg/timecode_parser"
 
 	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/gorm"

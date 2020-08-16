@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/khaiql/dbcleaner.v2"
 
-	googleAPI "timecodes/cmd/google_api"
+	googleAPI "timecodes/pkg/google_api"
 )
 
 type UserRepositorySuite struct {
