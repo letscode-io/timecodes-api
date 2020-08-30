@@ -1,4 +1,4 @@
-package main
+package controllers
 
 import (
 	"encoding/json"
@@ -6,7 +6,10 @@ import (
 	"log"
 	"net/http"
 
+	"timecodes/pkg/container"
+	m "timecodes/pkg/models"
 	timecodeParser "timecodes/pkg/timecode_parser"
+	"timecodes/pkg/users"
 
 	"github.com/gorilla/mux"
 )
@@ -29,9 +32,9 @@ type TimecodeJSON struct {
 	UserID      uint   `json:"userId,omitempty"`
 }
 
-// GET /timecodes/{videoId}
-func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
-	currentUser := getCurrentUser(r)
+// HandleGetTimecodes GET /timecodes/{videoId}
+func HandleGetTimecodes(c *container.Container, w http.ResponseWriter, r *http.Request) {
+	currentUser := users.GetCurrentUser(r)
 	videoID := mux.Vars(r)["videoId"]
 
 	timecodes := c.TimecodeRepository.FindByVideoID(videoID)
@@ -48,9 +51,9 @@ func handleGetTimecodes(c *Container, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(timecodeJSONCollection)
 }
 
-// POST /timecodes
-func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) {
-	currentUser := getCurrentUser(r)
+// HandleCreateTimecode POST /timecodes
+func HandleCreateTimecode(c *container.Container, w http.ResponseWriter, r *http.Request) {
+	currentUser := users.GetCurrentUser(r)
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	timecodeRequest := &TimecodeRequest{}
@@ -62,7 +65,7 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	timecode := &Timecode{
+	timecode := &m.Timecode{
 		Description: timecodeRequest.Description,
 		Seconds:     timecodeParser.ParseSeconds(timecodeRequest.RawSeconds),
 		VideoID:     timecodeRequest.VideoID,
@@ -79,7 +82,7 @@ func handleCreateTimecode(c *Container, w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func serializeTimecode(timecode *Timecode, currentUser *User) (timecodeJSON *TimecodeJSON) {
+func serializeTimecode(timecode *m.Timecode, currentUser *m.User) (timecodeJSON *TimecodeJSON) {
 	var likedByMe bool
 	var userID uint
 
@@ -99,7 +102,7 @@ func serializeTimecode(timecode *Timecode, currentUser *User) (timecodeJSON *Tim
 	}
 }
 
-func getLikedByMe(likes []TimecodeLike, userID uint) bool {
+func getLikedByMe(likes []m.TimecodeLike, userID uint) bool {
 	for _, like := range likes {
 		if like.UserID == userID {
 			return true
@@ -109,7 +112,7 @@ func getLikedByMe(likes []TimecodeLike, userID uint) bool {
 	return false
 }
 
-func parseVideoContentAndCreateTimecodes(c *Container, videoID string) {
+func parseVideoContentAndCreateTimecodes(c *container.Container, videoID string) {
 	description := c.YoutubeAPI.FetchVideoDescription(videoID)
 	parsedCodes := timecodeParser.Parse(description)
 

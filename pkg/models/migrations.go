@@ -1,16 +1,18 @@
-package main
+package models
 
-import (
-	"github.com/jinzhu/gorm"
-)
+import "github.com/jinzhu/gorm"
 
-func runMigrations(db *gorm.DB) {
-	applyTimecodesMigrations(db)
-	applyUsersMigrations(db)
-	applyTimecodeLikesMigrations(db)
+func Migrate(db *gorm.DB) {
+	runUsersMigrations(db)
+	runTimecodesMigrations(db)
+	runTimecodeLikesMigrations(db)
 }
 
-func applyTimecodesMigrations(db *gorm.DB) {
+func runUsersMigrations(db *gorm.DB) {
+	db.AutoMigrate(&User{})
+}
+
+func runTimecodesMigrations(db *gorm.DB) {
 	db.AutoMigrate(&Timecode{})
 	db.Model(&Timecode{}).AddUniqueIndex(
 		"idx_timecodes_seconds_text_video_id",
@@ -22,13 +24,7 @@ func applyTimecodesMigrations(db *gorm.DB) {
 	`)
 }
 
-func applyUsersMigrations(db *gorm.DB) {
-	db.AutoMigrate(&User{})
-
-	getAdminUser(db)
-}
-
-func applyTimecodeLikesMigrations(db *gorm.DB) {
+func runTimecodeLikesMigrations(db *gorm.DB) {
 	db.AutoMigrate(&TimecodeLike{})
 	db.Model(&TimecodeLike{}).AddUniqueIndex(
 		"idx_timecodes_likes_user_id_timecode_id_video_id",

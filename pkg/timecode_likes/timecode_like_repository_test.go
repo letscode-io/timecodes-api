@@ -1,7 +1,11 @@
-package main
+package timecodelikes
 
 import (
 	"testing"
+
+	"timecodes/internal/db"
+	testHelpers "timecodes/internal/test_helpers"
+	m "timecodes/pkg/models"
 
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -23,13 +27,14 @@ type TimecodeLikeRepositorySuite struct {
 }
 
 func (suite *TimecodeLikeRepositorySuite) SetupSuite() {
-	cleaner := createDBCleaner(suite.T())
-	db := initDB()
-	runMigrations(db)
+	database := db.Init()
+	cleaner := testHelpers.CreateDBCleaner(suite.T(), database)
 
 	suite.Cleaner = cleaner
-	suite.DB = db
-	suite.Repo = &DBTimecodeLikeRepository{DB: db}
+	suite.DB = database.Connection
+	suite.Repo = &DBTimecodeLikeRepository{DB: database.Connection}
+
+	m.Migrate(database.Connection)
 }
 
 func (suite *TimecodeLikeRepositorySuite) SetupTest() {
@@ -56,12 +61,12 @@ func (suite *TimecodeLikeRepositorySuite) TestDBTimecodeLikeRepository_Create() 
 	st := suite.T()
 
 	st.Run("when valid parameters given", func(t *testing.T) {
-		user := &User{Email: "user1@example.com"}
-		timecode := &Timecode{VideoID: "video-id-1", Description: "test"}
+		user := &m.User{Email: "user1@example.com"}
+		timecode := &m.Timecode{VideoID: "video-id-1", Description: "test"}
 		suite.DB.Create(user)
 		suite.DB.Create(timecode)
 
-		timecodeLike := &TimecodeLike{TimecodeID: timecode.ID}
+		timecodeLike := &m.TimecodeLike{TimecodeID: timecode.ID}
 		timecodeLike, err := suite.Repo.Create(timecodeLike, user.ID)
 
 		assert.Equal(t, user.ID, timecodeLike.UserID)
@@ -70,10 +75,10 @@ func (suite *TimecodeLikeRepositorySuite) TestDBTimecodeLikeRepository_Create() 
 	})
 
 	st.Run("when invalid parameters given", func(t *testing.T) {
-		user := &User{Email: "user2@example.com"}
+		user := &m.User{Email: "user2@example.com"}
 		suite.DB.Create(user)
 
-		timecodeLike := &TimecodeLike{TimecodeID: uint(1984)}
+		timecodeLike := &m.TimecodeLike{TimecodeID: uint(1984)}
 		timecodeLike, err := suite.Repo.Create(timecodeLike, user.ID)
 
 		assert.True(t, suite.DB.NewRecord(timecodeLike))
@@ -87,11 +92,11 @@ func (suite *TimecodeLikeRepositorySuite) TestDBTimecodeLikeRepository_Delete() 
 	st := suite.T()
 
 	st.Run("when record exists", func(t *testing.T) {
-		user := &User{Email: "user3@example.com"}
-		timecode := &Timecode{VideoID: "video-id-2", Description: "test"}
+		user := &m.User{Email: "user3@example.com"}
+		timecode := &m.Timecode{VideoID: "video-id-2", Description: "test"}
 		suite.DB.Create(user)
 		suite.DB.Create(timecode)
-		timecodeLike := &TimecodeLike{TimecodeID: timecode.ID, UserID: user.ID}
+		timecodeLike := &m.TimecodeLike{TimecodeID: timecode.ID, UserID: user.ID}
 		suite.DB.Create(timecodeLike)
 
 		timecodeLike, err := suite.Repo.Delete(timecodeLike, user.ID)
@@ -101,7 +106,7 @@ func (suite *TimecodeLikeRepositorySuite) TestDBTimecodeLikeRepository_Delete() 
 	})
 
 	st.Run("when record doesn't exist", func(t *testing.T) {
-		timecodeLike := &TimecodeLike{TimecodeID: 4, UserID: 5}
+		timecodeLike := &m.TimecodeLike{TimecodeID: 4, UserID: 5}
 
 		timecodeLike, err := suite.Repo.Delete(timecodeLike, 6)
 

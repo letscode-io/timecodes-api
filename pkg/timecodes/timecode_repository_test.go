@@ -1,8 +1,11 @@
-package main
+package timecodes
 
 import (
 	"testing"
 
+	"timecodes/internal/db"
+	testHelpers "timecodes/internal/test_helpers"
+	m "timecodes/pkg/models"
 	timecodeParser "timecodes/pkg/timecode_parser"
 
 	"github.com/jinzhu/gorm"
@@ -22,15 +25,16 @@ type TimecodeRepositorySuite struct {
 }
 
 func (suite *TimecodeRepositorySuite) SetupSuite() {
-	cleaner := createDBCleaner(suite.T())
-	db := initDB()
-	runMigrations(db)
+	database := db.Init()
+	cleaner := testHelpers.CreateDBCleaner(suite.T(), database)
 
 	suite.VideoID = "armenian-dram"
 	suite.AnotherVideoID = "strategist"
 	suite.Cleaner = cleaner
-	suite.DB = db
-	suite.Repo = &DBTimecodeRepository{DB: db}
+	suite.DB = database.Connection
+	suite.Repo = &DBTimecodeRepository{DB: database.Connection}
+
+	m.Migrate(database.Connection)
 }
 
 func (suite *TimecodeRepositorySuite) SetupTest() {
@@ -53,9 +57,9 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoID() {
 	t := suite.T()
 
 	t.Run("when matching records exist", func(t *testing.T) {
-		suite.DB.Create(&Timecode{VideoID: suite.VideoID, Seconds: 55, Description: "ABC"})
-		suite.DB.Create(&Timecode{VideoID: suite.VideoID, Seconds: 23, Description: "DEFG"})
-		suite.DB.Create(&Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
+		suite.DB.Create(&m.Timecode{VideoID: suite.VideoID, Seconds: 55, Description: "ABC"})
+		suite.DB.Create(&m.Timecode{VideoID: suite.VideoID, Seconds: 23, Description: "DEFG"})
+		suite.DB.Create(&m.Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
 		defer suite.Cleaner.Clean("timecodes")
 
 		timecodes := *suite.Repo.FindByVideoID(suite.VideoID)
@@ -66,7 +70,7 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_FindByVideoID() {
 	})
 
 	t.Run("when there are no matching records", func(t *testing.T) {
-		suite.DB.Create(&Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
+		suite.DB.Create(&m.Timecode{VideoID: suite.AnotherVideoID, Seconds: 77, Description: "FGHJ"})
 
 		timecodes := *suite.Repo.FindByVideoID(suite.VideoID)
 
@@ -78,7 +82,7 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_Create() {
 	t := suite.T()
 
 	t.Run("when record has been created", func(t *testing.T) {
-		timecode, err := suite.Repo.Create(&Timecode{VideoID: suite.VideoID, Seconds: 55, Description: "ABC"})
+		timecode, err := suite.Repo.Create(&m.Timecode{VideoID: suite.VideoID, Seconds: 55, Description: "ABC"})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, timecode.ID)
@@ -89,9 +93,9 @@ func (suite *TimecodeRepositorySuite) TestDBTimecodeRepository_Create() {
 		seconds := 10
 		description := "ABC"
 
-		suite.DB.Create(&Timecode{VideoID: suite.VideoID, Seconds: seconds, Description: description})
+		suite.DB.Create(&m.Timecode{VideoID: suite.VideoID, Seconds: seconds, Description: description})
 
-		timecode, err := suite.Repo.Create(&Timecode{VideoID: suite.VideoID, Seconds: seconds, Description: description})
+		timecode, err := suite.Repo.Create(&m.Timecode{VideoID: suite.VideoID, Seconds: seconds, Description: description})
 
 		assert.True(t, suite.DB.NewRecord(timecode))
 		assert.EqualError(t, err, `pq: duplicate key value violates unique constraint "idx_timecodes_seconds_text_video_id"`)

@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"fmt"
@@ -9,6 +9,24 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
+
+// Database holds database configuration
+type Database struct {
+	Connection *gorm.DB
+	Name       string
+	DSN        url.URL
+}
+
+// Init initializes a new database configuration
+func Init() *Database {
+	database := &Database{
+		Connection: initDB(),
+		Name:       getDbName(),
+		DSN:        getEnvDSN(),
+	}
+
+	return database
+}
 
 func getDbName() string {
 	return fmt.Sprintf("timecodes_%s", os.Getenv("APP_ENV"))

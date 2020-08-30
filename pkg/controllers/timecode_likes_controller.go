@@ -1,16 +1,20 @@
-package main
+package controllers
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"timecodes/pkg/container"
+	m "timecodes/pkg/models"
+	"timecodes/pkg/users"
 )
 
-// POST /timecode_likes
-func handleCreateTimecodeLike(c *Container, w http.ResponseWriter, r *http.Request) {
-	currentUser := getCurrentUser(r)
-	like := &TimecodeLike{}
+// HandleCreateTimecodeLike POST /timecode_likes
+func HandleCreateTimecodeLike(c *container.Container, w http.ResponseWriter, r *http.Request) {
+	currentUser := users.GetCurrentUser(r)
+	like := &m.TimecodeLike{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(reqBody, like)
@@ -32,10 +36,10 @@ func handleCreateTimecodeLike(c *Container, w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// DELETE /timecode_likes
-func handleDeleteTimecodeLike(c *Container, w http.ResponseWriter, r *http.Request) {
-	currentUser := getCurrentUser(r)
-	timecodeLike := &TimecodeLike{}
+// HandleDeleteTimecodeLike DELETE /timecode_likes
+func HandleDeleteTimecodeLike(c *container.Container, w http.ResponseWriter, r *http.Request) {
+	currentUser := users.GetCurrentUser(r)
+	timecodeLike := &m.TimecodeLike{}
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(reqBody, timecodeLike)

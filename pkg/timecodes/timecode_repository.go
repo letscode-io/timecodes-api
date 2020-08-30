@@ -1,29 +1,21 @@
-package main
+package timecodes
 
 import (
 	"strconv"
 
+	m "timecodes/pkg/models"
 	timecodeParser "timecodes/pkg/timecode_parser"
+	"timecodes/pkg/users"
 
 	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/gorm"
 )
 
-// Timecode represents timecode model
-type Timecode struct {
-	gorm.Model
-	Description string         `json:"description" gorm:"not null;default:null"`
-	Seconds     int            `json:"seconds" gorm:"not null"`
-	VideoID     string         `json:"videoId" gorm:"not null;index"`
-	Likes       []TimecodeLike `json:"likes" gorm:"foreignkey:TimecodeID"`
-	UserID      uint           `json:"userId"`
-}
-
 // TimecodeRepository represents repository interface
 type TimecodeRepository interface {
-	FindByVideoID(string) *[]*Timecode
-	Create(*Timecode) (*Timecode, error)
-	CreateFromParsedCodes([]timecodeParser.ParsedTimeCode, string) *[]*Timecode
+	FindByVideoID(string) *[]*m.Timecode
+	Create(*m.Timecode) (*m.Timecode, error)
+	CreateFromParsedCodes([]timecodeParser.ParsedTimeCode, string) *[]*m.Timecode
 }
 
 // DBTimecodeRepository implements TimecodeRepository
@@ -34,29 +26,29 @@ type DBTimecodeRepository struct {
 }
 
 // FindByVideoID finds timecode by given video id
-func (repo *DBTimecodeRepository) FindByVideoID(videoID string) *[]*Timecode {
-	timecodes := &[]*Timecode{}
+func (repo *DBTimecodeRepository) FindByVideoID(videoID string) *[]*m.Timecode {
+	timecodes := &[]*m.Timecode{}
 
 	repo.DB.Order("seconds asc").
 		Preload("Likes").
-		Where(&Timecode{VideoID: videoID}).
+		Where(&m.Timecode{VideoID: videoID}).
 		Find(timecodes)
 
 	return timecodes
 }
 
 // Create creates a new timecode record
-func (repo *DBTimecodeRepository) Create(timecode *Timecode) (*Timecode, error) {
+func (repo *DBTimecodeRepository) Create(timecode *m.Timecode) (*m.Timecode, error) {
 	err := repo.DB.Create(timecode).Error
 
 	return timecode, err
 }
 
 // CreateFromParsedCodes creates timecodes from parsed codes
-func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoID string) *[]*Timecode {
+func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timecodeParser.ParsedTimeCode, videoID string) *[]*m.Timecode {
 	seen := make(map[string]struct{})
 
-	var collection []*Timecode
+	var collection []*m.Timecode
 	for _, code := range parsedTimecodes {
 		key := strconv.Itoa(code.Seconds) + strcase.ToCamel(code.Description)
 		if _, ok := seen[key]; ok {
@@ -65,9 +57,9 @@ func (repo *DBTimecodeRepository) CreateFromParsedCodes(parsedTimecodes []timeco
 
 		seen[key] = struct{}{}
 
-		user := getAdminUser(repo.DB)
+		user := users.GetAdminUser(repo.DB)
 
-		timecode := &Timecode{
+		timecode := &m.Timecode{
 			Seconds:     code.Seconds,
 			VideoID:     videoID,
 			Description: code.Description,
