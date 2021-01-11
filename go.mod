@@ -6,7 +6,7 @@ require (
 	github.com/alexflint/go-filemutex v1.1.0 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
-	github.com/jarcoal/httpmock v1.0.6
+	github.com/jarcoal/httpmock v1.0.7
 	github.com/jinzhu/gorm v1.9.15
 	github.com/khaiql/dbcleaner v2.3.0+incompatible
 	github.com/rs/cors v1.7.0
