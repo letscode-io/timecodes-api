@@ -10,7 +10,7 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/khaiql/dbcleaner v2.3.0+incompatible
 	github.com/rs/cors v1.7.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	google.golang.org/api v0.25.0
 	gopkg.in/khaiql/dbcleaner.v2 v2.3.0
 )
