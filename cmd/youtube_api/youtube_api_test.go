@@ -85,7 +85,7 @@ func TestNew(t *testing.T) {
 		service, err := New()
 
 		assert.NotNil(t, service)
-		assert.Equal(t, "https://www.googleapis.com/youtube/v3/", service.client.BasePath)
+		assert.Equal(t, "https://youtube.googleapis.com/", service.client.BasePath)
 		assert.Nil(t, err)
 	})
 }

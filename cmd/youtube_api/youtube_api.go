@@ -34,7 +34,7 @@ func New() (*Service, error) {
 func (s *Service) FetchVideoDescription(videoId string) string {
 	call := s.client.
 		Videos.
-		List("snippet").
+		List([]string{"snippet"}).
 		Id(videoId)
 
 	response, err := call.Do()
@@ -57,7 +57,7 @@ func (s *Service) FetchVideoComments(videoId string) []string {
 
 	call := s.client.
 		CommentThreads.
-		List("snippet").
+		List([]string{"snippet"}).
 		VideoId(videoId).
 		Order("relevance").
 		MaxResults(100)
