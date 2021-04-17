@@ -1,6 +1,7 @@
 package youtubeapi
 
 import (
+	"net/http"
 	"os"
 	"testing"
 
@@ -8,8 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var mockClient = http.DefaultClient
+
 func TestMain(m *testing.M) {
-	httpmock.Activate()
+	httpmock.ActivateNonDefault(mockClient)
 	defer httpmock.DeactivateAndReset()
 
 	registerMockResponders()
@@ -31,18 +34,18 @@ func registerMockResponders() {
 		}
 	`
 	httpmock.RegisterResponder(
-		"GET", "https://www.googleapis.com/youtube/v3/videos?alt=json&id=legitVideoId&key=CORRECT_KEY&part=snippet&prettyPrint=false",
+		"GET", "https://youtube.googleapis.com/youtube/v3/videos?alt=json&id=legitVideoId&part=snippet&prettyPrint=false",
 		httpmock.NewStringResponder(200, legitVideoResponse),
 	)
 
 	notExistingVideoResponse := `{ "items": [] }`
 	httpmock.RegisterResponder(
-		"GET", "https://www.googleapis.com/youtube/v3/videos?alt=json&id=notExistingVideo&key=CORRECT_KEY&part=snippet&prettyPrint=false",
+		"GET", "https://youtube.googleapis.com/youtube/v3/videos?alt=json&id=notExistingVideo&part=snippet&prettyPrint=false",
 		httpmock.NewStringResponder(200, notExistingVideoResponse),
 	)
 
 	httpmock.RegisterResponder(
-		"GET", "https://www.googleapis.com/youtube/v3/videos?alt=json&id=wrongResponse&key=CORRECT_KEY&part=snippet&prettyPrint=false",
+		"GET", "https://youtube.googleapis.com/youtube/v3/videos?alt=json&id=wrongResponse&part=snippet&prettyPrint=false",
 		httpmock.NewStringResponder(500, "Something went wrong :("),
 	)
 
@@ -62,7 +65,7 @@ func registerMockResponders() {
 		}
 	`
 	httpmock.RegisterResponder(
-		"GET", "https://www.googleapis.com/youtube/v3/commentThreads?alt=json&key=CORRECT_KEY&maxResults=100&order=relevance&part=snippet&prettyPrint=false&videoId=legitVideoId",
+		"GET", "https://youtube.googleapis.com/youtube/v3/commentThreads?alt=json&maxResults=100&order=relevance&part=snippet&prettyPrint=false&videoId=legitVideoId",
 		httpmock.NewStringResponder(200, legitCommentsResponse),
 	)
 }
@@ -85,7 +88,30 @@ func TestNew(t *testing.T) {
 		service, err := New()
 
 		assert.NotNil(t, service)
-		assert.Equal(t, "https://www.googleapis.com/youtube/v3/", service.client.BasePath)
+		assert.Equal(t, "https://youtube.googleapis.com/", service.client.BasePath)
+		assert.Nil(t, err)
+	})
+}
+
+func TestNewWithClient(t *testing.T) {
+	t.Run("when youtube.NewService returns an error", func(t *testing.T) {
+		os.Setenv(GOOGLE_API_KEY, "")
+		defer os.Unsetenv(GOOGLE_API_KEY)
+
+		service, err := NewWithClient(nil)
+
+		assert.Nil(t, service)
+		assert.Contains(t, err.Error(), "google: could not find default credentials")
+	})
+
+	t.Run("when returns correct service", func(t *testing.T) {
+		os.Setenv(GOOGLE_API_KEY, "CORRECT_KEY")
+		defer os.Unsetenv(GOOGLE_API_KEY)
+
+		service, err := NewWithClient(http.DefaultClient)
+
+		assert.NotNil(t, service)
+		assert.Equal(t, "https://youtube.googleapis.com/", service.client.BasePath)
 		assert.Nil(t, err)
 	})
 }
@@ -93,10 +119,9 @@ func TestNew(t *testing.T) {
 func TestService_FetchVideoDescription(t *testing.T) {
 	os.Setenv(GOOGLE_API_KEY, "CORRECT_KEY")
 	defer os.Unsetenv(GOOGLE_API_KEY)
+	service, _ := NewWithClient(mockClient)
 
 	t.Run("when video exists", func(t *testing.T) {
-		service, _ := New()
-
 		videoID := "legitVideoId"
 		description := service.FetchVideoDescription(videoID)
 
@@ -104,8 +129,6 @@ func TestService_FetchVideoDescription(t *testing.T) {
 	})
 
 	t.Run("when video doesn't exist", func(t *testing.T) {
-		service, _ := New()
-
 		videoID := "notExistingVideo"
 		description := service.FetchVideoDescription(videoID)
 
@@ -113,8 +136,6 @@ func TestService_FetchVideoDescription(t *testing.T) {
 	})
 
 	t.Run("when http client returns an error", func(t *testing.T) {
-		service, _ := New()
-
 		videoID := "wrongResponse"
 		description := service.FetchVideoDescription(videoID)
 
@@ -125,10 +146,9 @@ func TestService_FetchVideoDescription(t *testing.T) {
 func TestService_FetchVideoComments(t *testing.T) {
 	os.Setenv(GOOGLE_API_KEY, "CORRECT_KEY")
 	defer os.Unsetenv(GOOGLE_API_KEY)
+	service, _ := NewWithClient(mockClient)
 
 	t.Run("when video exists", func(t *testing.T) {
-		service, _ := New()
-
 		videoID := "legitVideoId"
 		comments := service.FetchVideoComments(videoID)
 
@@ -136,8 +156,6 @@ func TestService_FetchVideoComments(t *testing.T) {
 	})
 
 	t.Run("when client returns an error", func(t *testing.T) {
-		service, _ := New()
-
 		videoID := "wrongResponse"
 		comments := service.FetchVideoComments(videoID)
 

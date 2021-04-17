@@ -3,6 +3,7 @@ package youtubeapi
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 
 	"google.golang.org/api/option"
@@ -31,10 +32,23 @@ func New() (*Service, error) {
 	return &Service{client: youtubeService}, nil
 }
 
+func NewWithClient(client *http.Client) (*Service, error) {
+	youtubeService, err := youtube.NewService(
+		context.Background(),
+		option.WithAPIKey(os.Getenv(GOOGLE_API_KEY)),
+		option.WithHTTPClient(client),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Service{client: youtubeService}, nil
+}
+
 func (s *Service) FetchVideoDescription(videoId string) string {
 	call := s.client.
 		Videos.
-		List("snippet").
+		List([]string{"snippet"}).
 		Id(videoId)
 
 	response, err := call.Do()
@@ -57,7 +71,7 @@ func (s *Service) FetchVideoComments(videoId string) []string {
 
 	call := s.client.
 		CommentThreads.
-		List("snippet").
+		List([]string{"snippet"}).
 		VideoId(videoId).
 		Order("relevance").
 		MaxResults(100)
