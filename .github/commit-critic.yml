@@ -5,4 +5,5 @@ ignoreWords:
   - traefik
   - timecode
   - timecodes
+  - youtube
 rules: ~
