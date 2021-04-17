@@ -3,6 +3,7 @@ package youtubeapi
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 
 	"google.golang.org/api/option"
@@ -24,6 +25,19 @@ type Service struct {
 
 func New() (*Service, error) {
 	youtubeService, err := youtube.NewService(context.Background(), option.WithAPIKey(os.Getenv(GOOGLE_API_KEY)))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Service{client: youtubeService}, nil
+}
+
+func NewWithClient(client *http.Client) (*Service, error) {
+	youtubeService, err := youtube.NewService(
+		context.Background(),
+		option.WithAPIKey(os.Getenv(GOOGLE_API_KEY)),
+		option.WithHTTPClient(client),
+	)
 	if err != nil {
 		return nil, err
 	}
