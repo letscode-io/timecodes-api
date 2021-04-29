@@ -1,0 +1,20 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: google.golang.org/api
+    versions:
+    - 0.36.0
+    - 0.38.0
+    - 0.39.0
+    - 0.40.0
+    - 0.41.0
+    - 0.42.0
+    - 0.43.0
+  - dependency-name: github.com/jarcoal/httpmock
+    versions:
+    - 1.0.7
